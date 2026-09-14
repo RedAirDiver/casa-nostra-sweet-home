@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { getSiteContent } from "@/lib/menu.functions";
+import { mediaUrl } from "@/lib/media";
 
 const ASSET_BASE = "https://casa-nostra-sweet-home.lovable.app/__l5e/assets-v1";
 const logoUrl = `${ASSET_BASE}/5fabc25b-c579-4c19-8939-9fd2e28c12bf/a86ce1af-2fa4-4341-9c11-5e2bd0854372.jpg`;
@@ -17,14 +19,17 @@ export const Route = createFileRoute("/")({
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
   ]}),
+  loader: () => getSiteContent(),
   component: Index,
 });
 
 const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Hitta hit", "#hitta"]];
-const menu = [
-  ["Pizzor", "32 rätter"], ["Pasta", "13 rätter"], ["Sallader", "11 rätter"],
-  ["Kebab & grill", "14 rätter"], ["À la carte", "7 rätter"], ["Dryck", "Öl, vin & alkoholfritt"],
-];
+
+function formatPrice(price: number | null, priceLarge: number | null) {
+  if (price === null && priceLarge === null) return null;
+  const parts = [price, priceLarge].filter((p): p is number => p !== null).map((p) => String(Math.round(p)));
+  return `${parts.join("/")}:-`;
+}
 
 function ArrowLink({ href, children, external = false }: { href: string; children: React.ReactNode; external?: boolean }) {
   return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;

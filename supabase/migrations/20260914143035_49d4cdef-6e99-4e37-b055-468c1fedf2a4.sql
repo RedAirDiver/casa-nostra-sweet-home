@@ -1,0 +1,4 @@
+CREATE POLICY "Menu media readable" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'menu-media');
+CREATE POLICY "Admins upload menu media" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'menu-media' AND public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins update menu media" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'menu-media' AND public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins delete menu media" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'menu-media' AND public.has_role(auth.uid(), 'admin'));
