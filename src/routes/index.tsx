@@ -37,6 +37,7 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
 
 function Index() {
   const [open, setOpen] = useState(false);
+  const { categories, gallery } = Route.useLoaderData();
   return <main>
     <header className="site-nav">
       <a href="#top" className="brand"><img src={logoUrl} alt="Casa Nostra Kjula" /><span>Casa <em>Nostra</em></span></a>
