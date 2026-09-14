@@ -54,7 +54,18 @@ function Index() {
 
     <section id="lunch" className="offers"><article><p className="gold-label">Dagens lunch</p><div className="price"><strong>149:-</strong><span>Måndag–fredag kl. 11–14.30</span></div><p>Sallad nr 1, 2, 3, 6, 7, 8<br/>Pasta nr 1, 2, 5, 6, 8, 9, 10, 11, 12<br/>Pizzor nr 4–22 & 29</p></article><article><p className="gold-label">Kvällsdeal</p><div className="price"><strong>209:-</strong><span>Alla dagar 15–19 · äta här</span></div><p>Välj mellan utvalda pizzor, pasta eller fläskfilé Oscar – inkl. öl eller vin. Alkoholfritt alternativ finns.</p><small>Pasta nr 1, 2, 5, 6, 8–12 · Pizzor nr 4–22 & 29</small></article></section>
 
-    <section id="meny" className="section menu-section"><div className="section-heading"><div><p className="eyebrow">Vår meny</p><h2>Våra rätter</h2></div><a className="gold-link" href="#meny">Hela menyn →</a></div><div className="menu-grid">{menu.map(([name, count], i) => <a href="tel:016-2004909" className="menu-card" key={name}><div className={`food food-${i}`}><img src={i % 2 ? galleryTwoUrl : galleryOneUrl} alt="Italiensk mat från Casa Nostra" /></div><div><strong>{name}</strong><span>{count}</span></div></a>)}</div></section>
+    <section id="meny" className="section menu-section">
+      <div className="section-heading"><div><p className="eyebrow">Vår meny</p><h2>Våra rätter</h2></div><a className="gold-link" href="tel:016-2004909">Ring & beställ →</a></div>
+      <div className="menu-grid">{categories.map((c, i) => <a href={`#grupp-${c.id}`} className="menu-card" key={c.id}><div className={`food food-${i}`}><img src={mediaUrl(c.image_url) ?? (i % 2 ? galleryTwoUrl : galleryOneUrl)} alt={`${c.name} från Casa Nostra`} /></div><div><strong>{c.name}</strong><span>{c.items.length > 0 ? `${c.items.length} rätter` : "Fråga oss"}</span></div></a>)}</div>
+      {categories.filter((c) => c.items.length > 0).map((c) => <div className="menu-group" id={`grupp-${c.id}`} key={c.id}>
+        <h3>{c.name}</h3>
+        {c.description && <p className="menu-group-desc">{c.description}</p>}
+        <div className="menu-list">{c.items.map((item) => <div className="menu-row" key={item.id}>
+          <div><strong>{item.item_number ? `${item.item_number}. ` : ""}{item.name}</strong>{item.description && <span>{item.description}</span>}</div>
+          {formatPrice(item.price, item.price_large) && <b>{formatPrice(item.price, item.price_large)}</b>}
+        </div>)}</div>
+      </div>)}
+    </section>
 
     <section id="om" className="about"><div className="about-photo"><img src={restaurantUrl} alt="Restaurangen Casa Nostra i Kjula" /></div><div className="about-copy"><p className="eyebrow">Om oss</p><h2>Det finns inget mer romantiskt än italiensk mat</h2><p>Vår filosofi är enkel: god mat lagad på råvaror av hög kvalitet. Vi har plats för stora sällskap inomhus, och varje vardag serverar vi lunch som är lika bra att äta här som att ta med på språng.</p><p>Oavsett vad du är sugen på att dricka till din måltid har vi något som passar – en kall Ramlösa, ett glas vin eller en öl. Vi har fullständiga rättigheter.</p><ArrowLink href="tel:016-2004909">Ring oss</ArrowLink></div></section>
 
