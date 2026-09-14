@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import logo from "@/assets/a86ce1af-2fa4-4341-9c11-5e2bd0854372.jpg.asset.json";
-import heroVideo from "@/assets/a0807e17-5a76-499e-bdb3-e5fc36987993.mp4.asset.json";
-import restaurant from "@/assets/31d9ffae-2ecb-4627-bf6d-1ff4f5e38fef.jpg.asset.json";
-import galleryOne from "@/assets/b1493e75-324d-4bc9-8e74-8eac5ea5340d.jpg.asset.json";
-import galleryTwo from "@/assets/41ce71bd-c1ba-45f5-80a8-45b827814cb8.jpg.asset.json";
+
+const ASSET_BASE = "https://casa-nostra-sweet-home.lovable.app/__l5e/assets-v1";
+const logoUrl = `${ASSET_BASE}/5fabc25b-c579-4c19-8939-9fd2e28c12bf/a86ce1af-2fa4-4341-9c11-5e2bd0854372.jpg`;
+const heroVideoUrl = `${ASSET_BASE}/95f27c06-f16d-4e13-b9a4-6ed7cfd853f8/a0807e17-5a76-499e-bdb3-e5fc36987993.mp4`;
+const restaurantUrl = `${ASSET_BASE}/eba95576-acac-436f-a852-0477f57636c4/31d9ffae-2ecb-4627-bf6d-1ff4f5e38fef.jpg`;
+const galleryOneUrl = `${ASSET_BASE}/fab5099b-4e0d-4c4f-80f5-e72b5c552808/b1493e75-324d-4bc9-8e74-8eac5ea5340d.jpg`;
+const galleryTwoUrl = `${ASSET_BASE}/52717201-d3b8-4b82-9b85-f12b07aecac8/41ce71bd-c1ba-45f5-80a8-45b827814cb8.jpg`;
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
