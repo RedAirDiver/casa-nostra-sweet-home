@@ -23,8 +23,11 @@ export type MenuCategory = {
 export type GalleryImage = { id: string; image_url: string; caption: string | null };
 
 function publicClient() {
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-  return createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+  const key =
+    process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
+  const url = process.env["SUPABASE_URL"] || import.meta.env['VITE_SUPABASE_URL'];
+  if (!key || !url) return null;
+  return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
       fetch: (input, init) => {
@@ -41,7 +44,10 @@ function publicClient() {
 
 export const getSiteContent = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
+  const empty = { categories: [] as MenuCategory[], gallery: [] as GalleryImage[] };
+  if (!supabase) return empty;
 
+  try {
   const [categoriesRes, itemsRes, galleryRes] = await Promise.all([
     supabase
       .from("menu_categories")
@@ -83,4 +89,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
   }));
 
   return { categories, gallery };
+  } catch {
+    return empty;
+  }
 });
