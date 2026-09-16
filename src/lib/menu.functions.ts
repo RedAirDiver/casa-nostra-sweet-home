@@ -52,11 +52,15 @@ function publicClient() {
 
 export const getSiteContent = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = publicClient();
-  const empty = { categories: [] as MenuCategory[], gallery: [] as GalleryImage[] };
+  const empty = {
+    categories: [] as MenuCategory[],
+    gallery: [] as GalleryImage[],
+    news: [] as NewsPost[],
+  };
   if (!supabase) return empty;
 
   try {
-  const [categoriesRes, itemsRes, galleryRes] = await Promise.all([
+  const [categoriesRes, itemsRes, galleryRes, newsRes] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("id, name, description, image_url, sort_order")
@@ -69,6 +73,12 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
       .eq("is_available", true)
       .order("sort_order"),
     supabase.from("gallery_images").select("id, image_url, caption, sort_order").order("sort_order"),
+    supabase
+      .from("news_posts")
+      .select("id, title, body, image_url, published_at")
+      .eq("is_published", true)
+      .order("published_at", { ascending: false })
+      .limit(3),
   ]);
 
   const items = itemsRes.data ?? [];
@@ -96,7 +106,15 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     caption: g.caption,
   }));
 
-  return { categories, gallery };
+  const news: NewsPost[] = (newsRes.data ?? []).map((n) => ({
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    image_url: n.image_url,
+    published_at: n.published_at,
+  }));
+
+  return { categories, gallery, news };
   } catch {
     return empty;
   }
