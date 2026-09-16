@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getSiteContent } from "@/lib/menu.functions";
 import { mediaUrl } from "@/lib/media";
 
