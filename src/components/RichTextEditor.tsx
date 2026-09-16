@@ -1,4 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Heading1,
+  Heading2,
+  Heading3,
+  Pilcrow,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  List,
+  ListOrdered,
+  Quote,
+  Link2,
+  Undo2,
+  Redo2,
+} from "lucide-react";
 
 type Props = {
   value: string;
@@ -7,66 +23,79 @@ type Props = {
 };
 
 type Tool =
-  | { kind: "cmd"; label: string; title: string; cmd: string; arg?: string }
+  | {
+      kind: "cmd";
+      icon: typeof Bold;
+      title: string;
+      cmd: string;
+      arg?: string;
+      state?: string;
+      block?: string;
+    }
   | { kind: "sep" }
-  | { kind: "link" }
-  | { kind: "unlink" }
-  | { kind: "color" };
+  | { kind: "link" };
 
 const tools: Tool[] = [
-  { kind: "cmd", label: "B", title: "Fet", cmd: "bold" },
-  { kind: "cmd", label: "I", title: "Kursiv", cmd: "italic" },
-  { kind: "cmd", label: "U", title: "Understruken", cmd: "underline" },
-  { kind: "cmd", label: "S", title: "Genomstruken", cmd: "strikeThrough" },
+  { kind: "cmd", icon: Heading1, title: "Rubrik 1", cmd: "formatBlock", arg: "h2", block: "h2" },
+  { kind: "cmd", icon: Heading2, title: "Rubrik 2", cmd: "formatBlock", arg: "h3", block: "h3" },
+  { kind: "cmd", icon: Heading3, title: "Rubrik 3", cmd: "formatBlock", arg: "h4", block: "h4" },
+  { kind: "cmd", icon: Pilcrow, title: "Brödtext", cmd: "formatBlock", arg: "p", block: "p" },
   { kind: "sep" },
-  { kind: "cmd", label: "H1", title: "Stor rubrik", cmd: "formatBlock", arg: "h2" },
-  { kind: "cmd", label: "H2", title: "Mellanrubrik", cmd: "formatBlock", arg: "h3" },
-  { kind: "cmd", label: "H3", title: "Liten rubrik", cmd: "formatBlock", arg: "h4" },
-  { kind: "cmd", label: "¶", title: "Brödtext", cmd: "formatBlock", arg: "p" },
-  { kind: "cmd", label: "❝", title: "Citat", cmd: "formatBlock", arg: "blockquote" },
+  { kind: "cmd", icon: Bold, title: "Fet", cmd: "bold", state: "bold" },
+  { kind: "cmd", icon: Italic, title: "Kursiv", cmd: "italic", state: "italic" },
+  { kind: "cmd", icon: Underline, title: "Understruken", cmd: "underline", state: "underline" },
+  { kind: "cmd", icon: Strikethrough, title: "Genomstruken", cmd: "strikeThrough", state: "strikeThrough" },
   { kind: "sep" },
-  { kind: "cmd", label: "• Lista", title: "Punktlista", cmd: "insertUnorderedList" },
-  { kind: "cmd", label: "1. Lista", title: "Numrerad lista", cmd: "insertOrderedList" },
-  { kind: "cmd", label: "⇤", title: "Minska indrag", cmd: "outdent" },
-  { kind: "cmd", label: "⇥", title: "Öka indrag", cmd: "indent" },
-  { kind: "sep" },
-  { kind: "cmd", label: "⯇", title: "Vänsterställ", cmd: "justifyLeft" },
-  { kind: "cmd", label: "⯈⯇", title: "Centrera", cmd: "justifyCenter" },
-  { kind: "cmd", label: "⯈", title: "Högerställ", cmd: "justifyRight" },
+  { kind: "cmd", icon: List, title: "Punktlista", cmd: "insertUnorderedList", state: "insertUnorderedList" },
+  { kind: "cmd", icon: ListOrdered, title: "Numrerad lista", cmd: "insertOrderedList", state: "insertOrderedList" },
+  { kind: "cmd", icon: Quote, title: "Citat", cmd: "formatBlock", arg: "blockquote", block: "blockquote" },
   { kind: "sep" },
   { kind: "link" },
-  { kind: "unlink" },
-  { kind: "color" },
-  { kind: "cmd", label: "―", title: "Avdelare", cmd: "insertHorizontalRule" },
-  { kind: "cmd", label: "✕ format", title: "Rensa formatering", cmd: "removeFormat" },
   { kind: "sep" },
-  { kind: "cmd", label: "⟲", title: "Ångra", cmd: "undo" },
-  { kind: "cmd", label: "⟳", title: "Gör om", cmd: "redo" },
+  { kind: "cmd", icon: Undo2, title: "Ångra", cmd: "undo" },
+  { kind: "cmd", icon: Redo2, title: "Gör om", cmd: "redo" },
 ];
-
-const btnClass =
-  "rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-foreground";
 
 export function RichTextEditor({ value, onChange, placeholder }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState<{ inline: string[]; block: string }>({ inline: [], block: "p" });
 
   useEffect(() => {
     const el = ref.current;
     if (el && el.innerHTML !== value) el.innerHTML = value;
   }, [value]);
 
+  function syncActive() {
+    if (typeof document === "undefined") return;
+    const inline: string[] = [];
+    for (const cmd of ["bold", "italic", "underline", "strikeThrough", "insertUnorderedList", "insertOrderedList"]) {
+      try {
+        if (document.queryCommandState(cmd)) inline.push(cmd);
+      } catch {
+        /* ignore */
+      }
+    }
+    let block = "p";
+    try {
+      block = (document.queryCommandValue("formatBlock") || "p").toLowerCase();
+    } catch {
+      /* ignore */
+    }
+    setActive({ inline, block: block === "div" || block === "" ? "p" : block });
+  }
+
   function exec(cmd: string, arg?: string) {
     ref.current?.focus();
     document.execCommand(cmd, false, arg);
     onChange(ref.current?.innerHTML ?? "");
+    syncActive();
   }
 
   return (
-    <div className="rounded-md border border-border">
-      <div className="flex flex-wrap items-center gap-1 border-b border-border p-2">
+    <div className="rte">
+      <div className="rte-toolbar">
         {tools.map((t, i) => {
-          if (t.kind === "sep")
-            return <span key={`sep-${i}`} className="mx-1 h-5 w-px bg-border" />;
+          if (t.kind === "sep") return <span key={`sep-${i}`} className="rte-sep" />;
           if (t.kind === "link")
             return (
               <button
@@ -77,52 +106,27 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
                 onClick={() => {
                   const url = prompt("Länkadress (https://…)");
                   if (url) exec("createLink", url);
+                  else exec("unlink");
                 }}
-                className={btnClass}
+                className="rte-btn"
               >
-                Länk
+                <Link2 size={18} />
               </button>
             );
-          if (t.kind === "unlink")
-            return (
-              <button
-                key="unlink"
-                type="button"
-                title="Ta bort länk"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => exec("unlink")}
-                className={btnClass}
-              >
-                Ta bort länk
-              </button>
-            );
-          if (t.kind === "color")
-            return (
-              <label
-                key="color"
-                title="Textfärg"
-                className={`${btnClass} flex cursor-pointer items-center gap-1`}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                Färg
-                <input
-                  type="color"
-                  defaultValue="#c9a35b"
-                  className="h-4 w-5 cursor-pointer border-0 bg-transparent p-0"
-                  onChange={(e) => exec("foreColor", e.target.value)}
-                />
-              </label>
-            );
+          const Icon = t.icon;
+          const isActive =
+            (t.state && active.inline.includes(t.state)) || (t.block && active.block === t.block);
           return (
             <button
-              key={`${t.cmd}-${t.label}`}
+              key={`${t.cmd}-${t.title}`}
               type="button"
               title={t.title}
+              aria-pressed={Boolean(isActive)}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => exec(t.cmd, t.arg)}
-              className={btnClass}
+              className={`rte-btn${isActive ? " is-active" : ""}`}
             >
-              {t.label}
+              <Icon size={18} />
             </button>
           );
         })}
@@ -133,14 +137,20 @@ export function RichTextEditor({ value, onChange, placeholder }: Props) {
         suppressContentEditableWarning
         data-placeholder={placeholder ?? "Skriv ditt inlägg…"}
         onInput={(e) => onChange((e.target as HTMLDivElement).innerHTML)}
+        onKeyUp={syncActive}
+        onMouseUp={syncActive}
+        onFocus={syncActive}
         onPaste={(e) => {
           e.preventDefault();
           const text = e.clipboardData.getData("text/plain");
           document.execCommand("insertText", false, text);
           onChange(ref.current?.innerHTML ?? "");
         }}
-        className="prose-editor min-h-[180px] bg-muted px-3 py-2 text-sm text-foreground outline-none"
+        className="prose-editor rte-surface"
       />
+      <p className="rte-hint">
+        Använd verktygsfältet för rubriker, listor och formatering. Dra i nedre högra hörnet för att förstora.
+      </p>
     </div>
   );
 }
