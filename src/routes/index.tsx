@@ -40,12 +40,7 @@ const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComp
 
 function Index() {
   const [open, setOpen] = useState(false);
-  const [fbReady, setFbReady] = useState(false);
   const { categories, gallery } = Route.useLoaderData();
-  useEffect(() => {
-    const t = setTimeout(() => setFbReady((r) => r), 0);
-    return () => clearTimeout(t);
-  }, []);
   return <main>
     <header className="site-nav">
       <a href="#top" className="brand"><img src={logoUrl} alt="Casa Nostra Kjula" /><span>Casa <em>Nostra</em></span></a>
