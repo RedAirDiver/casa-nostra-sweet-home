@@ -23,7 +23,9 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Facebook", "#facebook"], ["Hitta hit", "#hitta"]];
+const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Nyheter", "#nyheter"], ["Hitta hit", "#hitta"]];
+
+const dateFormatter = new Intl.DateTimeFormat("sv-SE", { day: "numeric", month: "long", year: "numeric" });
 
 function formatPrice(price: number | null, priceLarge: number | null) {
   if (price === null && priceLarge === null) return null;
@@ -35,8 +37,6 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
   return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;
 }
 
-const FB_PAGE = "https://www.facebook.com/casanostrakjula";
-const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE)}&tabs=&width=500&height=260&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=sv_SE`;
 
 function Index() {
   const [open, setOpen] = useState(false);
