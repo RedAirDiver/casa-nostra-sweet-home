@@ -22,6 +22,14 @@ export type MenuCategory = {
 
 export type GalleryImage = { id: string; image_url: string; caption: string | null };
 
+export type NewsPost = {
+  id: string;
+  title: string;
+  body: string | null;
+  image_url: string | null;
+  published_at: string;
+};
+
 function publicClient() {
   const key =
     process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
