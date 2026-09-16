@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getSiteContent } from "@/lib/menu.functions";
 import { mediaUrl } from "@/lib/media";
 
@@ -35,20 +35,12 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
   return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;
 }
 
-declare global {
-  interface Window { FB?: { XFBML: { parse: (el?: HTMLElement) => void } }; }
-}
+const FB_PAGE = "https://www.facebook.com/casanostrakjula";
+const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE)}&tabs=timeline&width=500&height=700&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=sv_SE`;
 
 function Index() {
   const [open, setOpen] = useState(false);
   const { categories, gallery } = Route.useLoaderData();
-  useEffect(() => {
-    if (window.FB) { window.FB.XFBML.parse(document.getElementById("facebook") ?? undefined); return; }
-    const s = document.createElement("script");
-    s.src = "https://connect.facebook.net/sv_SE/sdk.js#xfbml=1&version=v22.0";
-    s.async = true; s.defer = true; s.crossOrigin = "anonymous";
-    document.body.appendChild(s);
-  }, []);
   return <main>
     <header className="site-nav">
       <a href="#top" className="brand"><img src={logoUrl} alt="Casa Nostra Kjula" /><span>Casa <em>Nostra</em></span></a>
@@ -83,7 +75,7 @@ function Index() {
 
     <section id="galleri" className="section gallery"><div className="section-heading right"><div><p className="eyebrow">Atmosfär</p><h2>Galleri</h2></div></div><div className="gallery-grid">{(gallery.length ? gallery : [{ id: "a", image_url: galleryOneUrl, caption: "Miljö hos Casa Nostra" }, { id: "b", image_url: galleryTwoUrl, caption: "Italiensk mat" }, { id: "c", image_url: restaurantUrl, caption: "Casa Nostra restaurang" }]).map((g, i) => <img key={g.id} className={i === 0 ? "gallery-main" : undefined} src={mediaUrl(g.image_url) ?? ""} alt={g.caption ?? "Bild från Casa Nostra"} />)}</div></section>
 
-    <section id="facebook" className="section fb-section"><div className="section-heading"><div><p className="eyebrow">Följ oss</p><h2>Senaste från Facebook</h2></div><a className="gold-link" target="_blank" rel="noreferrer" href="https://www.facebook.com/casanostrakjula">Besök sidan →</a></div><div className="fb-embed"><div className="fb-page" data-href="https://www.facebook.com/casanostrakjula" data-tabs="timeline" data-width="500" data-height="700" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="false"><blockquote cite="https://www.facebook.com/casanostrakjula" className="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/casanostrakjula">Casa Nostra Kjula på Facebook</a></blockquote></div></div></section>
+    <section id="facebook" className="section fb-section"><div className="section-heading"><div><p className="eyebrow">Följ oss</p><h2>Senaste från Facebook</h2></div><a className="gold-link" target="_blank" rel="noreferrer" href={FB_PAGE}>Besök sidan →</a></div><div className="fb-embed"><iframe title="Casa Nostra Kjula på Facebook" src={FB_EMBED} loading="lazy" scrolling="no" allow="clipboard-write; encrypted-media; picture-in-picture; web-share" /><p className="fb-fallback">Ser rutan tom ut? <a target="_blank" rel="noreferrer" href={FB_PAGE}>Öppna vår Facebook-sida</a> för alla inlägg.</p></div></section>
 
     <section id="hitta" className="visit"><div><p className="eyebrow">Besök oss</p><h2>Hitta hit</h2><Info title="Adress"><a target="_blank" rel="noreferrer" href="https://maps.google.com/?q=Williams+v%C3%A4g+2,+635+06+Eskilstuna">Williams väg 2, 635 06 Eskilstuna</a></Info><Info title="Öppettider"><div className="hours"><small>Sommartid</small><span>Måndag–fredag</span><span>11:00–21:00</span><span>Lördag–söndag</span><span>12:00–21:00</span><small>Vintertid</small><span>Måndag–torsdag</span><span>11:00–20:00</span><span>Fredag</span><span>11:00–21:00</span><span>Lördag</span><span>12:00–21:00</span><span>Söndag</span><span>12:00–20:00</span></div></Info><Info title="Telefon"><a href="tel:016-2004909">016-200 49 09</a><a className="mail" href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></Info></div><div className="map"><iframe title="Karta" src="https://www.openstreetmap.org/export/embed.html?bbox=16.6650%2C59.3560%2C16.7150%2C59.3760&layer=mapnik&marker=59.3660%2C16.6900" /></div></section>
 
