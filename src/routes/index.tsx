@@ -23,7 +23,9 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Facebook", "#facebook"], ["Hitta hit", "#hitta"]];
+const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Nyheter", "#nyheter"], ["Hitta hit", "#hitta"]];
+
+const dateFormatter = new Intl.DateTimeFormat("sv-SE", { day: "numeric", month: "long", year: "numeric" });
 
 function formatPrice(price: number | null, priceLarge: number | null) {
   if (price === null && priceLarge === null) return null;
@@ -35,12 +37,10 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
   return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;
 }
 
-const FB_PAGE = "https://www.facebook.com/casanostrakjula";
-const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE)}&tabs=&width=500&height=260&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=sv_SE`;
 
 function Index() {
   const [open, setOpen] = useState(false);
-  const { categories, gallery } = Route.useLoaderData();
+  const { categories, gallery, news } = Route.useLoaderData();
   return <main>
     <header className="site-nav">
       <a href="#top" className="brand"><img src={logoUrl} alt="Casa Nostra Kjula" /><span>Casa <em>Nostra</em></span></a>
@@ -75,11 +75,21 @@ function Index() {
 
     <section id="galleri" className="section gallery"><div className="section-heading right"><div><p className="eyebrow">Atmosfär</p><h2>Galleri</h2></div></div><div className="gallery-grid">{(gallery.length ? gallery : [{ id: "a", image_url: galleryOneUrl, caption: "Miljö hos Casa Nostra" }, { id: "b", image_url: galleryTwoUrl, caption: "Italiensk mat" }, { id: "c", image_url: restaurantUrl, caption: "Casa Nostra restaurang" }]).map((g, i) => <img key={g.id} className={i === 0 ? "gallery-main" : undefined} src={mediaUrl(g.image_url) ?? ""} alt={g.caption ?? "Bild från Casa Nostra"} />)}</div></section>
 
-    <section id="facebook" className="section fb-section"><div className="section-heading"><div><p className="eyebrow">Följ oss</p><h2>Senaste från Facebook</h2></div><a className="gold-link" target="_blank" rel="noreferrer" href={FB_PAGE}>Besök sidan →</a></div><div className="fb-embed"><iframe title="Casa Nostra Kjula på Facebook" src={FB_EMBED} loading="lazy" scrolling="no" allow="clipboard-write; encrypted-media; picture-in-picture; web-share" /><p className="fb-fallback">Ser rutan tom ut? <a target="_blank" rel="noreferrer" href={FB_PAGE}>Öppna vår Facebook-sida</a> för alla inlägg.</p></div></section>
+    {news.length > 0 && <section id="nyheter" className="section news-section">
+      <div className="section-heading"><div><p className="eyebrow">Aktuellt</p><h2>Senaste nytt</h2></div></div>
+      <div className="news-grid">{news.map((p) => <article className="news-card" key={p.id}>
+        {mediaUrl(p.image_url) && <img src={mediaUrl(p.image_url)!} alt={p.title} loading="lazy" />}
+        <div className="news-body">
+          <time dateTime={p.published_at}>{dateFormatter.format(new Date(p.published_at))}</time>
+          <h3>{p.title}</h3>
+          {p.body && <div className="news-text" dangerouslySetInnerHTML={{ __html: p.body }} />}
+        </div>
+      </article>)}</div>
+    </section>}
 
     <section id="hitta" className="visit"><div><p className="eyebrow">Besök oss</p><h2>Hitta hit</h2><Info title="Adress"><a target="_blank" rel="noreferrer" href="https://maps.google.com/?q=Williams+v%C3%A4g+2,+635+06+Eskilstuna">Williams väg 2, 635 06 Eskilstuna</a></Info><Info title="Öppettider"><div className="hours"><small>Sommartid</small><span>Måndag–fredag</span><span>11:00–21:00</span><span>Lördag–söndag</span><span>12:00–21:00</span><small>Vintertid</small><span>Måndag–torsdag</span><span>11:00–20:00</span><span>Fredag</span><span>11:00–21:00</span><span>Lördag</span><span>12:00–21:00</span><span>Söndag</span><span>12:00–20:00</span></div></Info><Info title="Telefon"><a href="tel:016-2004909">016-200 49 09</a><a className="mail" href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></Info></div><div className="map"><iframe title="Karta" src="https://www.openstreetmap.org/export/embed.html?bbox=16.6650%2C59.3560%2C16.7150%2C59.3760&layer=mapnik&marker=59.3660%2C16.6900" /></div></section>
 
-    <footer><div className="footer-grid"><div><h3>Casa <em>Nostra</em> Kjula</h3><p>Italienskt kök i Kjula – pizza, pasta, sallader och à la carte. Fullständiga rättigheter.</p><div className="social"><a href="https://instagram.com/casanostrakjula">Instagram</a><a href="https://facebook.com/casanostrakjula">Facebook</a></div></div><div><h3>Kjula</h3><p>Williams väg 2, 635 06 Eskilstuna</p><a href="tel:016-2004909">016-200 49 09</a><a href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></div><div><p className="gold-label">Sidor</p>{nav.filter((_,i) => [0,1,3,6].includes(i)).map(([l,h]) => <a href={h} key={l}>{l}</a>)}<Link to="/auth">Logga in</Link></div></div><div className="copyright">© 2026 Casa Nostra Kjula</div></footer>
+    <footer><div className="footer-grid"><div><h3>Casa <em>Nostra</em> Kjula</h3><p>Italienskt kök i Kjula – pizza, pasta, sallader och à la carte. Fullständiga rättigheter.</p><div className="social"><a href="https://instagram.com/casanostrakjula">Instagram</a></div></div><div><h3>Kjula</h3><p>Williams väg 2, 635 06 Eskilstuna</p><a href="tel:016-2004909">016-200 49 09</a><a href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></div><div><p className="gold-label">Sidor</p>{nav.filter((_,i) => [0,1,3,6].includes(i)).map(([l,h]) => <a href={h} key={l}>{l}</a>)}<Link to="/auth">Logga in</Link></div></div><div className="copyright">© 2026 Casa Nostra Kjula</div></footer>
   </main>;
 }
 
