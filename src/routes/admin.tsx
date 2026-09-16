@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { mediaUrl } from "@/lib/media";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -39,6 +40,16 @@ type Item = {
   sort_order: number;
 };
 type Gallery = { id: string; image_url: string; caption: string | null; sort_order: number };
+type News = {
+  id: string;
+  title: string;
+  body: string | null;
+  image_url: string | null;
+  published_at: string;
+  is_published: boolean;
+};
+
+type Tab = "meny" | "galleri" | "nyheter";
 
 const input =
   "w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
@@ -63,15 +74,20 @@ function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [gallery, setGallery] = useState<Gallery[]>([]);
+  const [news, setNews] = useState<News[]>([]);
+  const [tab, setTab] = useState<Tab>("meny");
+  const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [c, i, g] = await Promise.all([
+    const [c, i, g, n] = await Promise.all([
       supabase.from("menu_categories").select("*").order("sort_order"),
       supabase.from("menu_items").select("*").order("sort_order"),
       supabase.from("gallery_images").select("*").order("sort_order"),
+      supabase.from("news_posts").select("*").order("published_at", { ascending: false }),
     ]);
+    setNews((n.data ?? []) as News[]);
     setCategories((c.data ?? []) as Category[]);
     setItems((i.data ?? []) as Item[]);
     setGallery((g.data ?? []) as Gallery[]);
@@ -163,6 +179,19 @@ function AdminPage() {
 
       {error && <p className="mt-6 text-sm text-red-400">{error}</p>}
 
+      <nav className="mt-8 flex gap-2">
+        {([
+          ["meny", "Meny"],
+          ["galleri", "Galleri"],
+          ["nyheter", "Nyheter"],
+        ] as [Tab, string][]).map(([key, label]) => (
+          <button key={key} className={tab === key ? btn : ghost} onClick={() => setTab(key)}>
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {tab === "meny" && (<>
       {/* Menygrupper */}
       <section className="mt-10">
         <h2 className="font-[var(--serif)] text-2xl">Menygrupper</h2>
@@ -434,8 +463,10 @@ function AdminPage() {
         </section>
       )}
 
-      {/* Galleri */}
-      <section className="mt-14 pb-20">
+      </>)}
+
+      {tab === "galleri" && (
+      <section className="mt-10 pb-20">
         <h2 className="font-[var(--serif)] text-2xl">Galleri</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {gallery.map((g) => (
@@ -504,6 +535,123 @@ function AdminPage() {
           />
         </label>
       </section>
+      )}
+
+      {tab === "nyheter" && (
+      <section className="mt-10 pb-20">
+        <h2 className="font-[var(--serif)] text-2xl">Nyhetsinlägg</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          De tre senaste publicerade inläggen visas på startsidan.
+        </p>
+        <button
+          className={`${btn} mt-4`}
+          onClick={() =>
+            run(() =>
+              supabase.from("news_posts").insert({ title: "Nytt inlägg", body: "", is_published: false }),
+            )
+          }
+        >
+          + Nytt inlägg
+        </button>
+        <div className="mt-6 flex flex-col gap-5">
+          {news.map((n) => (
+            <article key={n.id} className="rounded-lg border border-border p-4">
+              <div className="grid gap-3 md:grid-cols-[2fr_1fr]">
+                <input
+                  className={input}
+                  placeholder="Rubrik"
+                  defaultValue={n.title}
+                  onBlur={(e) =>
+                    run(() => supabase.from("news_posts").update({ title: e.target.value }).eq("id", n.id))
+                  }
+                />
+                <input
+                  className={input}
+                  type="date"
+                  defaultValue={n.published_at.slice(0, 10)}
+                  onBlur={(e) =>
+                    run(() =>
+                      supabase
+                        .from("news_posts")
+                        .update({ published_at: new Date(e.target.value).toISOString() })
+                        .eq("id", n.id),
+                    )
+                  }
+                />
+              </div>
+
+              <div className="mt-3">
+                <RichTextEditor
+                  value={draft[n.id] ?? n.body ?? ""}
+                  onChange={(html) => setDraft((d) => ({ ...d, [n.id]: html }))}
+                />
+                <button
+                  className={`${btn} mt-3`}
+                  onClick={() =>
+                    run(async () => {
+                      const html = draft[n.id] ?? n.body ?? "";
+                      return supabase.from("news_posts").update({ body: html }).eq("id", n.id);
+                    })
+                  }
+                >
+                  Spara text
+                </button>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                {mediaUrl(n.image_url) && (
+                  <img
+                    src={mediaUrl(n.image_url)!}
+                    alt={n.title}
+                    className="h-16 w-24 rounded object-cover"
+                  />
+                )}
+                <label className={`${ghost} cursor-pointer`}>
+                  {n.image_url ? "Byt bild" : "Ladda upp bild"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      run(async () => {
+                        const path = await uploadFile(file);
+                        return supabase.from("news_posts").update({ image_url: path }).eq("id", n.id);
+                      });
+                    }}
+                  />
+                </label>
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    defaultChecked={n.is_published}
+                    onChange={(e) =>
+                      run(() =>
+                        supabase
+                          .from("news_posts")
+                          .update({ is_published: e.target.checked })
+                          .eq("id", n.id),
+                      )
+                    }
+                  />
+                  Publicerat
+                </label>
+                <button
+                  className={ghost}
+                  onClick={() => {
+                    if (confirm(`Ta bort inlägget "${n.title}"?`))
+                      run(() => supabase.from("news_posts").delete().eq("id", n.id));
+                  }}
+                >
+                  Ta bort
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      )}
     </main>
   );
 }
