@@ -114,6 +114,34 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     published_at: n.published_at,
   }));
 
+  // Bucket is private: turn storage paths into signed URLs so images load everywhere.
+  const isStoragePath = (v: string | null) =>
+    Boolean(v) && !/^https?:\/\//i.test(v!) && !v!.startsWith("/");
+  const paths = new Set<string>();
+  for (const c of categories) {
+    if (isStoragePath(c.image_url)) paths.add(c.image_url!);
+    for (const i of c.items) if (isStoragePath(i.image_url)) paths.add(i.image_url!);
+  }
+  for (const g of gallery) if (isStoragePath(g.image_url)) paths.add(g.image_url);
+  for (const n of news) if (isStoragePath(n.image_url)) paths.add(n.image_url!);
+
+  if (paths.size > 0) {
+    const signedMap = new Map<string, string>();
+    const { data: signed } = await supabase.storage
+      .from("menu-media")
+      .createSignedUrls([...paths], 60 * 60 * 24 * 7);
+    for (const s of signed ?? []) {
+      if (s.path && s.signedUrl) signedMap.set(s.path, s.signedUrl);
+    }
+    const sign = (v: string | null) => (v && signedMap.get(v)) || v;
+    for (const c of categories) {
+      c.image_url = sign(c.image_url);
+      for (const i of c.items) i.image_url = sign(i.image_url);
+    }
+    for (const g of gallery) g.image_url = sign(g.image_url) ?? g.image_url;
+    for (const n of news) n.image_url = sign(n.image_url);
+  }
+
   return { categories, gallery, news };
   } catch {
     return empty;
