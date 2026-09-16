@@ -35,19 +35,16 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
   return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;
 }
 
-declare global {
-  interface Window { FB?: { XFBML: { parse: (el?: HTMLElement) => void } }; }
-}
+const FB_PAGE = "https://www.facebook.com/casanostrakjula";
+const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE)}&tabs=timeline&width=500&height=700&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=sv_SE`;
 
 function Index() {
   const [open, setOpen] = useState(false);
+  const [fbReady, setFbReady] = useState(false);
   const { categories, gallery } = Route.useLoaderData();
   useEffect(() => {
-    if (window.FB) { window.FB.XFBML.parse(document.getElementById("facebook") ?? undefined); return; }
-    const s = document.createElement("script");
-    s.src = "https://connect.facebook.net/sv_SE/sdk.js#xfbml=1&version=v22.0";
-    s.async = true; s.defer = true; s.crossOrigin = "anonymous";
-    document.body.appendChild(s);
+    const t = setTimeout(() => setFbReady((r) => r), 0);
+    return () => clearTimeout(t);
   }, []);
   return <main>
     <header className="site-nav">
