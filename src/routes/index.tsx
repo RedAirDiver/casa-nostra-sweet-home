@@ -36,7 +36,7 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
 }
 
 const FB_PAGE = "https://www.facebook.com/casanostrakjula";
-const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE)}&tabs=&width=500&height=700&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=sv_SE`;
+const FB_EMBED = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE)}&tabs=&width=500&height=260&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=sv_SE`;
 
 function Index() {
   const [open, setOpen] = useState(false);
