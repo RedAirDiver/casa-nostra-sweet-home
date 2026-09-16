@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Hitta hit", "#hitta"]];
+const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Facebook", "#facebook"], ["Hitta hit", "#hitta"]];
 
 function formatPrice(price: number | null, priceLarge: number | null) {
   if (price === null && priceLarge === null) return null;
