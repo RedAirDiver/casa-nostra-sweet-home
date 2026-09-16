@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { mediaUrl } from "@/lib/media";
 import { RichTextEditor } from "@/components/RichTextEditor";
+import { StoredImage } from "@/components/StoredImage";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -256,13 +256,11 @@ function AdminPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-3">
-                {mediaUrl(c.image_url) && (
-                  <img
-                    src={mediaUrl(c.image_url)!}
-                    alt={c.name}
-                    className="h-14 w-20 rounded object-cover"
-                  />
-                )}
+                <StoredImage
+                  path={c.image_url}
+                  alt={c.name}
+                  className="h-14 w-20 rounded object-cover"
+                />
                 <label className={`${ghost} cursor-pointer`}>
                   Byt bild
                   <input
@@ -392,13 +390,11 @@ function AdminPage() {
                   }
                 />
                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {mediaUrl(it.image_url) && (
-                    <img
-                      src={mediaUrl(it.image_url)!}
-                      alt={it.name}
-                      className="h-14 w-20 rounded object-cover"
-                    />
-                  )}
+                  <StoredImage
+                    path={it.image_url}
+                    alt={it.name}
+                    className="h-14 w-20 rounded object-cover"
+                  />
                   <label className={`${ghost} cursor-pointer`}>
                     Byt bild
                     <input
@@ -471,8 +467,8 @@ function AdminPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {gallery.map((g) => (
             <div key={g.id} className="rounded-lg border border-border p-3">
-              <img
-                src={mediaUrl(g.image_url) ?? ""}
+              <StoredImage
+                path={g.image_url}
                 alt={g.caption ?? "Galleribild"}
                 className="h-36 w-full rounded object-cover"
               />
@@ -599,13 +595,11 @@ function AdminPage() {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-3">
-                {mediaUrl(n.image_url) && (
-                  <img
-                    src={mediaUrl(n.image_url)!}
-                    alt={n.title}
-                    className="h-16 w-24 rounded object-cover"
-                  />
-                )}
+                <StoredImage
+                  path={n.image_url}
+                  alt={n.title}
+                  className="h-16 w-24 rounded object-cover"
+                />
                 <label className={`${ghost} cursor-pointer`}>
                   {n.image_url ? "Byt bild" : "Ladda upp bild"}
                   <input
