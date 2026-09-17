@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { listAdmins, addAdmin, removeAdmin } from "@/lib/admins.functions";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { StoredImage } from "@/components/StoredImage";
 
@@ -49,7 +51,15 @@ type News = {
   is_published: boolean;
 };
 
-type Tab = "meny" | "galleri" | "nyheter";
+type Admin = {
+  user_id: string;
+  email: string;
+  created_at: string;
+  confirmed: boolean;
+  isSelf: boolean;
+};
+
+type Tab = "meny" | "galleri" | "nyheter" | "agare";
 
 const input =
   "w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
