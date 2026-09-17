@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { listAdmins, addAdmin, removeAdmin } from "@/lib/admins.functions";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { StoredImage } from "@/components/StoredImage";
 
@@ -49,7 +51,15 @@ type News = {
   is_published: boolean;
 };
 
-type Tab = "meny" | "galleri" | "nyheter";
+type Admin = {
+  user_id: string;
+  email: string;
+  created_at: string;
+  confirmed: boolean;
+  isSelf: boolean;
+};
+
+type Tab = "meny" | "galleri" | "nyheter" | "agare";
 
 const input =
   "w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
@@ -79,6 +89,26 @@ function AdminPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminNote, setAdminNote] = useState<string | null>(null);
+
+  const fetchAdmins = useServerFn(listAdmins);
+  const inviteAdmin = useServerFn(addAdmin);
+  const dropAdmin = useServerFn(removeAdmin);
+
+  const loadAdmins = useCallback(async () => {
+    try {
+      setAdmins((await fetchAdmins()) as Admin[]);
+    } catch {
+      setAdmins([]);
+    }
+  }, [fetchAdmins]);
+
+  useEffect(() => {
+    if (tab === "agare") void loadAdmins();
+  }, [tab, loadAdmins]);
 
   const load = useCallback(async () => {
     const [c, i, g, n] = await Promise.all([
@@ -184,6 +214,7 @@ function AdminPage() {
           ["meny", "Meny"],
           ["galleri", "Galleri"],
           ["nyheter", "Nyheter"],
+          ["agare", "Ägare"],
         ] as [Tab, string][]).map(([key, label]) => (
           <button key={key} className={tab === key ? btn : ghost} onClick={() => setTab(key)}>
             {label}
@@ -643,6 +674,95 @@ function AdminPage() {
               </div>
             </article>
           ))}
+        </div>
+      </section>
+      )}
+      {tab === "agare" && (
+      <section className="mt-10 pb-20">
+        <h2 className="font-[var(--serif)] text-2xl">Ägare och administratörer</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Lägg till fler personer som får redigera menyer, galleri och nyheter. Har personen inget
+          konto skickas en inbjudan via e-post.
+        </p>
+
+        <form
+          className="mt-5 flex flex-wrap items-center gap-3"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError(null);
+            setAdminNote(null);
+            setAdminBusy(true);
+            try {
+              const res = (await inviteAdmin({ data: { email: adminEmail } })) as {
+                invited: boolean;
+                email: string;
+              };
+              setAdminNote(
+                res.invited
+                  ? `Inbjudan skickad till ${res.email}. Personen blir ägare när kontot aktiveras.`
+                  : `${res.email} är nu administratör.`,
+              );
+              setAdminEmail("");
+              await loadAdmins();
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Kunde inte lägga till administratören.");
+            } finally {
+              setAdminBusy(false);
+            }
+          }}
+        >
+          <input
+            type="email"
+            required
+            placeholder="namn@exempel.se"
+            className={`${input} max-w-xs`}
+            value={adminEmail}
+            onChange={(e) => setAdminEmail(e.target.value)}
+          />
+          <button type="submit" className={btn} disabled={adminBusy}>
+            {adminBusy ? "Vänta…" : "Lägg till administratör"}
+          </button>
+        </form>
+
+        {adminNote && <p className="mt-3 text-sm text-primary">{adminNote}</p>}
+
+        <div className="mt-6 flex flex-col gap-3">
+          {admins.map((a) => (
+            <div
+              key={a.user_id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-4"
+            >
+              <div>
+                <p className="text-sm">{a.email}</p>
+                <p className="text-xs text-muted-foreground">
+                  {a.isSelf ? "Du" : a.confirmed ? "Aktiv" : "Inbjuden – inte aktiverad"}
+                </p>
+              </div>
+              {!a.isSelf && (
+                <button
+                  className={ghost}
+                  onClick={async () => {
+                    if (!confirm(`Ta bort behörighet för ${a.email}?`)) return;
+                    setError(null);
+                    setAdminNote(null);
+                    try {
+                      await dropAdmin({ data: { userId: a.user_id } });
+                      await loadAdmins();
+                    } catch (err) {
+                      setError(
+                        err instanceof Error ? err.message : "Kunde inte ta bort administratören.",
+                      );
+                    }
+                  }}
+                >
+                  Ta bort
+                </button>
+              )}
+            </div>
+          ))}
+          {admins.length === 0 && (
+            <p className="text-sm text-muted-foreground">Inga administratörer hittades.</p>
+          )}
         </div>
       </section>
       )}
