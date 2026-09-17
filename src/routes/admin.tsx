@@ -677,6 +677,95 @@ function AdminPage() {
         </div>
       </section>
       )}
+      {tab === "agare" && (
+      <section className="mt-10 pb-20">
+        <h2 className="font-[var(--serif)] text-2xl">Ägare och administratörer</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Lägg till fler personer som får redigera menyer, galleri och nyheter. Har personen inget
+          konto skickas en inbjudan via e-post.
+        </p>
+
+        <form
+          className="mt-5 flex flex-wrap items-center gap-3"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError(null);
+            setAdminNote(null);
+            setAdminBusy(true);
+            try {
+              const res = (await inviteAdmin({ data: { email: adminEmail } })) as {
+                invited: boolean;
+                email: string;
+              };
+              setAdminNote(
+                res.invited
+                  ? `Inbjudan skickad till ${res.email}. Personen blir ägare när kontot aktiveras.`
+                  : `${res.email} är nu administratör.`,
+              );
+              setAdminEmail("");
+              await loadAdmins();
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Kunde inte lägga till administratören.");
+            } finally {
+              setAdminBusy(false);
+            }
+          }}
+        >
+          <input
+            type="email"
+            required
+            placeholder="namn@exempel.se"
+            className={`${input} max-w-xs`}
+            value={adminEmail}
+            onChange={(e) => setAdminEmail(e.target.value)}
+          />
+          <button type="submit" className={btn} disabled={adminBusy}>
+            {adminBusy ? "Vänta…" : "Lägg till administratör"}
+          </button>
+        </form>
+
+        {adminNote && <p className="mt-3 text-sm text-primary">{adminNote}</p>}
+
+        <div className="mt-6 flex flex-col gap-3">
+          {admins.map((a) => (
+            <div
+              key={a.user_id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-4"
+            >
+              <div>
+                <p className="text-sm">{a.email}</p>
+                <p className="text-xs text-muted-foreground">
+                  {a.isSelf ? "Du" : a.confirmed ? "Aktiv" : "Inbjuden – inte aktiverad"}
+                </p>
+              </div>
+              {!a.isSelf && (
+                <button
+                  className={ghost}
+                  onClick={async () => {
+                    if (!confirm(`Ta bort behörighet för ${a.email}?`)) return;
+                    setError(null);
+                    setAdminNote(null);
+                    try {
+                      await dropAdmin({ data: { userId: a.user_id } });
+                      await loadAdmins();
+                    } catch (err) {
+                      setError(
+                        err instanceof Error ? err.message : "Kunde inte ta bort administratören.",
+                      );
+                    }
+                  }}
+                >
+                  Ta bort
+                </button>
+              )}
+            </div>
+          ))}
+          {admins.length === 0 && (
+            <p className="text-sm text-muted-foreground">Inga administratörer hittades.</p>
+          )}
+        </div>
+      </section>
+      )}
     </main>
   );
 }
