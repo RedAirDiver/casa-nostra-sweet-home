@@ -214,6 +214,7 @@ function AdminPage() {
           ["meny", "Meny"],
           ["galleri", "Galleri"],
           ["nyheter", "Nyheter"],
+          ["agare", "Ägare"],
         ] as [Tab, string][]).map(([key, label]) => (
           <button key={key} className={tab === key ? btn : ghost} onClick={() => setTab(key)}>
             {label}
