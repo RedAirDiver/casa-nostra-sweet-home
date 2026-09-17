@@ -89,6 +89,26 @@ function AdminPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminNote, setAdminNote] = useState<string | null>(null);
+
+  const fetchAdmins = useServerFn(listAdmins);
+  const inviteAdmin = useServerFn(addAdmin);
+  const dropAdmin = useServerFn(removeAdmin);
+
+  const loadAdmins = useCallback(async () => {
+    try {
+      setAdmins((await fetchAdmins()) as Admin[]);
+    } catch {
+      setAdmins([]);
+    }
+  }, [fetchAdmins]);
+
+  useEffect(() => {
+    if (tab === "agare") void loadAdmins();
+  }, [tab, loadAdmins]);
 
   const load = useCallback(async () => {
     const [c, i, g, n] = await Promise.all([
