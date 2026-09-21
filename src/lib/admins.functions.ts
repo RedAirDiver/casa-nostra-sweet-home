@@ -92,7 +92,7 @@ export const addAdmin = createServerFn({ method: "POST" })
       .from("user_roles")
       .upsert({ user_id: user.id, role: "admin" }, { onConflict: "user_id,role" });
     if (error) throw error;
-    return { ok: true, invited, email };
+    return { ok: true, invited, created, email };
   });
 
 export const removeAdmin = createServerFn({ method: "POST" })
