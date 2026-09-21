@@ -693,16 +693,25 @@ function AdminPage() {
             setAdminNote(null);
             setAdminBusy(true);
             try {
-              const res = (await inviteAdmin({ data: { email: adminEmail } })) as {
+              const res = (await inviteAdmin({
+                data: {
+                  email: adminEmail,
+                  ...(adminPassword.trim() ? { password: adminPassword.trim() } : {}),
+                },
+              })) as {
                 invited: boolean;
+                created: boolean;
                 email: string;
               };
               setAdminNote(
                 res.invited
                   ? `Inbjudan skickad till ${res.email}. Personen blir ägare när kontot aktiveras.`
-                  : `${res.email} är nu administratör.`,
+                  : res.created
+                    ? `${res.email} är nu administratör och kan logga in direkt med lösenordet.`
+                    : `${res.email} är nu administratör.`,
               );
               setAdminEmail("");
+              setAdminPassword("");
               await loadAdmins();
             } catch (err) {
               setError(err instanceof Error ? err.message : "Kunde inte lägga till administratören.");
