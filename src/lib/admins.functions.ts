@@ -44,7 +44,17 @@ export const addAdmin = createServerFn({ method: "POST" })
 
     let invited = false;
     if (!user) {
-      const { data: inv, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const req = getRequest();
+      const originHeader =
+        req?.headers.get("origin") ??
+        (req?.headers.get("referer") ? new URL(req.headers.get("referer")!).origin : null) ??
+        (req?.url ? new URL(req.url).origin : null);
+      const redirectTo = originHeader ? `${originHeader}/admin` : undefined;
+      const { data: inv, error: invErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+        email,
+        redirectTo ? { redirectTo } : undefined,
+      );
       if (invErr) throw new Error(`Kunde inte bjuda in ${email}: ${invErr.message}`);
       user = inv.user;
       invited = true;
