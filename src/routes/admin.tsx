@@ -730,6 +730,14 @@ function AdminPage() {
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
           />
+          <input
+            type="text"
+            minLength={8}
+            placeholder="Lösenord (valfritt, minst 8 tecken)"
+            className={`${input} max-w-xs`}
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+          />
           <button type="submit" className={btn} disabled={adminBusy}>
             {adminBusy ? "Vänta…" : "Lägg till administratör"}
           </button>
