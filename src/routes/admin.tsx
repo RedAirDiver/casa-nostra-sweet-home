@@ -1,8 +1,20 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { StoredImage } from "@/components/StoredImage";
+
+async function createAccount(email: string, password: string) {
+  const signupClient = createClient(
+    import.meta.env['VITE_SUPABASE_URL'] as string,
+    import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string,
+    { auth: { persistSession: false, autoRefreshToken: false, storage: undefined } },
+  );
+  const { error } = await signupClient.auth.signUp({ email, password });
+  if (error && !/already registered|already exists/i.test(error.message)) throw error;
+}
+
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -88,6 +100,8 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminNote, setAdminNote] = useState<string | null>(null);
 
@@ -699,8 +713,8 @@ function AdminPage() {
       <section className="mt-10 pb-20">
         <h2 className="font-[var(--serif)] text-2xl">Ägare och administratörer</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Personen skapar först ett konto på inloggningssidan och bekräftar sin e-post. Lägg sedan
-          till samma e-postadress här för att ge administratörsbehörighet.
+          Ange e-post och ett lösenord så skapas kontot direkt som administratör. Har personen redan
+          ett konto räcker det med e-postadressen (lämna lösenordet tomt).
         </p>
 
         <form
@@ -712,21 +726,24 @@ function AdminPage() {
             setAdminBusy(true);
             try {
               const normalizedEmail = adminEmail.trim().toLowerCase();
-              const { data: account, error: accountError } = await supabase
-                .from("account_directory")
-                .select("user_id, email")
-                .eq("email", normalizedEmail)
-                .maybeSingle();
-              if (accountError) throw accountError;
-              if (!account) {
-                throw new Error("Inget bekräftat konto hittades. Personen måste först skapa konto och öppna administrationen en gång.");
+              const pwd = adminPassword.trim();
+              if (pwd) await createAccount(normalizedEmail, pwd);
+              const { data: granted, error: rpcError } = await supabase.rpc("grant_admin_by_email", {
+                _email: normalizedEmail,
+              });
+              if (rpcError) throw rpcError;
+              if (!granted) {
+                throw new Error(
+                  "Inget konto hittades för den e-postadressen. Ange ett lösenord så skapas kontot direkt.",
+                );
               }
-              const { error: roleError } = await supabase
-                .from("user_roles")
-                .upsert({ user_id: account.user_id, role: "admin" }, { onConflict: "user_id,role" });
-              if (roleError) throw roleError;
-              setAdminNote(`${account.email} är nu administratör.`);
+              setAdminNote(
+                pwd
+                  ? `${normalizedEmail} är nu administratör och kan logga in med lösenordet du angav.`
+                  : `${normalizedEmail} är nu administratör.`,
+              );
               setAdminEmail("");
+              setAdminPassword("");
               await loadAdmins();
             } catch (err) {
               setError(err instanceof Error ? err.message : "Kunde inte lägga till administratören.");
@@ -743,9 +760,18 @@ function AdminPage() {
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
           />
+          <input
+            type="text"
+            minLength={8}
+            placeholder="Lösenord (minst 8 tecken)"
+            className={`${input} max-w-xs`}
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+          />
           <button type="submit" className={btn} disabled={adminBusy}>
-            {adminBusy ? "Vänta…" : "Ge administratörsbehörighet"}
+            {adminBusy ? "Vänta…" : "Skapa / ge behörighet"}
           </button>
+
         </form>
 
         {adminNote && <p className="mt-3 text-sm text-primary">{adminNote}</p>}
