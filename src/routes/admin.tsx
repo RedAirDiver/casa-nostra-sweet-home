@@ -91,6 +91,7 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminNote, setAdminNote] = useState<string | null>(null);
 
@@ -681,8 +682,9 @@ function AdminPage() {
       <section className="mt-10 pb-20">
         <h2 className="font-[var(--serif)] text-2xl">Ägare och administratörer</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Lägg till fler personer som får redigera menyer, galleri och nyheter. Har personen inget
-          konto skickas en inbjudan via e-post.
+          Lägg till fler personer som får redigera menyer, galleri och nyheter. Anger du ett
+          lösenord skapas kontot direkt som godkänt – lämnar du fältet tomt skickas en inbjudan
+          via e-post.
         </p>
 
         <form
@@ -693,16 +695,25 @@ function AdminPage() {
             setAdminNote(null);
             setAdminBusy(true);
             try {
-              const res = (await inviteAdmin({ data: { email: adminEmail } })) as {
+              const res = (await inviteAdmin({
+                data: {
+                  email: adminEmail,
+                  ...(adminPassword.trim() ? { password: adminPassword.trim() } : {}),
+                },
+              })) as {
                 invited: boolean;
+                created: boolean;
                 email: string;
               };
               setAdminNote(
                 res.invited
                   ? `Inbjudan skickad till ${res.email}. Personen blir ägare när kontot aktiveras.`
-                  : `${res.email} är nu administratör.`,
+                  : res.created
+                    ? `${res.email} är nu administratör och kan logga in direkt med lösenordet.`
+                    : `${res.email} är nu administratör.`,
               );
               setAdminEmail("");
+              setAdminPassword("");
               await loadAdmins();
             } catch (err) {
               setError(err instanceof Error ? err.message : "Kunde inte lägga till administratören.");
@@ -718,6 +729,14 @@ function AdminPage() {
             className={`${input} max-w-xs`}
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
+          />
+          <input
+            type="text"
+            minLength={8}
+            placeholder="Lösenord (valfritt, minst 8 tecken)"
+            className={`${input} max-w-xs`}
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
           />
           <button type="submit" className={btn} disabled={adminBusy}>
             {adminBusy ? "Vänta…" : "Lägg till administratör"}
