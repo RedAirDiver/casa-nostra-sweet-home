@@ -1,8 +1,20 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { StoredImage } from "@/components/StoredImage";
+
+async function createAccount(email: string, password: string) {
+  const signupClient = createClient(
+    import.meta.env['VITE_SUPABASE_URL'] as string,
+    import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] as string,
+    { auth: { persistSession: false, autoRefreshToken: false, storage: undefined } },
+  );
+  const { error } = await signupClient.auth.signUp({ email, password });
+  if (error && !/already registered|already exists/i.test(error.message)) throw error;
+}
+
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
