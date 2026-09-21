@@ -682,8 +682,9 @@ function AdminPage() {
       <section className="mt-10 pb-20">
         <h2 className="font-[var(--serif)] text-2xl">Ägare och administratörer</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Lägg till fler personer som får redigera menyer, galleri och nyheter. Har personen inget
-          konto skickas en inbjudan via e-post.
+          Lägg till fler personer som får redigera menyer, galleri och nyheter. Anger du ett
+          lösenord skapas kontot direkt som godkänt – lämnar du fältet tomt skickas en inbjudan
+          via e-post.
         </p>
 
         <form
