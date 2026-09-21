@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_directory: {
+        Row: {
+          created_at: string
+          email: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gallery_images: {
         Row: {
           caption: string | null

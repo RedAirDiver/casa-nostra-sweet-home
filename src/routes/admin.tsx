@@ -1,8 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { listAdmins, addAdmin, removeAdmin } from "@/lib/admins.functions";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { StoredImage } from "@/components/StoredImage";
 
@@ -55,7 +53,6 @@ type Admin = {
   user_id: string;
   email: string;
   created_at: string;
-  confirmed: boolean;
   isSelf: boolean;
 };
 
@@ -91,21 +88,32 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminNote, setAdminNote] = useState<string | null>(null);
 
-  const fetchAdmins = useServerFn(listAdmins);
-  const inviteAdmin = useServerFn(addAdmin);
-  const dropAdmin = useServerFn(removeAdmin);
-
   const loadAdmins = useCallback(async () => {
     try {
-      setAdmins((await fetchAdmins()) as Admin[]);
+      const [{ data: user }, { data: roles, error: rolesError }, { data: accounts, error: accountsError }] =
+        await Promise.all([
+          supabase.auth.getUser(),
+          supabase.from("user_roles").select("user_id, created_at").eq("role", "admin"),
+          supabase.from("account_directory").select("user_id, email"),
+        ]);
+      if (rolesError) throw rolesError;
+      if (accountsError) throw accountsError;
+      const emailById = new Map((accounts ?? []).map((account) => [account.user_id, account.email]));
+      setAdmins(
+        (roles ?? []).map((role) => ({
+          user_id: role.user_id,
+          created_at: role.created_at,
+          email: emailById.get(role.user_id) ?? "(okänd e-post)",
+          isSelf: role.user_id === user.user?.id,
+        })),
+      );
     } catch {
       setAdmins([]);
     }
-  }, [fetchAdmins]);
+  }, []);
 
   useEffect(() => {
     if (tab === "agare") void loadAdmins();
@@ -133,6 +141,15 @@ function AdminPage() {
         return;
       }
       setEmail(data.user.email ?? null);
+      if (data.user.email) {
+        const { error: directoryError } = await supabase.from("account_directory").upsert({
+          user_id: data.user.id,
+          email: data.user.email.trim().toLowerCase(),
+        });
+        if (directoryError) {
+          setError("Kunde inte registrera kontot för behörighetshantering.");
+        }
+      }
       let { data: roles } = await supabase
         .from("user_roles")
         .select("role")
@@ -682,9 +699,8 @@ function AdminPage() {
       <section className="mt-10 pb-20">
         <h2 className="font-[var(--serif)] text-2xl">Ägare och administratörer</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Lägg till fler personer som får redigera menyer, galleri och nyheter. Anger du ett
-          lösenord skapas kontot direkt som godkänt – lämnar du fältet tomt skickas en inbjudan
-          via e-post.
+          Personen skapar först ett konto på inloggningssidan och bekräftar sin e-post. Lägg sedan
+          till samma e-postadress här för att ge administratörsbehörighet.
         </p>
 
         <form
@@ -695,25 +711,22 @@ function AdminPage() {
             setAdminNote(null);
             setAdminBusy(true);
             try {
-              const res = (await inviteAdmin({
-                data: {
-                  email: adminEmail,
-                  ...(adminPassword.trim() ? { password: adminPassword.trim() } : {}),
-                },
-              })) as {
-                invited: boolean;
-                created: boolean;
-                email: string;
-              };
-              setAdminNote(
-                res.invited
-                  ? `Inbjudan skickad till ${res.email}. Personen blir ägare när kontot aktiveras.`
-                  : res.created
-                    ? `${res.email} är nu administratör och kan logga in direkt med lösenordet.`
-                    : `${res.email} är nu administratör.`,
-              );
+              const normalizedEmail = adminEmail.trim().toLowerCase();
+              const { data: account, error: accountError } = await supabase
+                .from("account_directory")
+                .select("user_id, email")
+                .eq("email", normalizedEmail)
+                .maybeSingle();
+              if (accountError) throw accountError;
+              if (!account) {
+                throw new Error("Inget bekräftat konto hittades. Personen måste först skapa konto och öppna administrationen en gång.");
+              }
+              const { error: roleError } = await supabase
+                .from("user_roles")
+                .upsert({ user_id: account.user_id, role: "admin" }, { onConflict: "user_id,role" });
+              if (roleError) throw roleError;
+              setAdminNote(`${account.email} är nu administratör.`);
               setAdminEmail("");
-              setAdminPassword("");
               await loadAdmins();
             } catch (err) {
               setError(err instanceof Error ? err.message : "Kunde inte lägga till administratören.");
@@ -730,16 +743,8 @@ function AdminPage() {
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
           />
-          <input
-            type="text"
-            minLength={8}
-            placeholder="Lösenord (valfritt, minst 8 tecken)"
-            className={`${input} max-w-xs`}
-            value={adminPassword}
-            onChange={(e) => setAdminPassword(e.target.value)}
-          />
           <button type="submit" className={btn} disabled={adminBusy}>
-            {adminBusy ? "Vänta…" : "Lägg till administratör"}
+            {adminBusy ? "Vänta…" : "Ge administratörsbehörighet"}
           </button>
         </form>
 
@@ -754,7 +759,7 @@ function AdminPage() {
               <div>
                 <p className="text-sm">{a.email}</p>
                 <p className="text-xs text-muted-foreground">
-                  {a.isSelf ? "Du" : a.confirmed ? "Aktiv" : "Inbjuden – inte aktiverad"}
+                  {a.isSelf ? "Du" : "Aktiv"}
                 </p>
               </div>
               {!a.isSelf && (
@@ -765,7 +770,12 @@ function AdminPage() {
                     setError(null);
                     setAdminNote(null);
                     try {
-                      await dropAdmin({ data: { userId: a.user_id } });
+                      const { error: removeError } = await supabase
+                        .from("user_roles")
+                        .delete()
+                        .eq("user_id", a.user_id)
+                        .eq("role", "admin");
+                      if (removeError) throw removeError;
                       await loadAdmins();
                     } catch (err) {
                       setError(
