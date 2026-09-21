@@ -91,6 +91,7 @@ function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminNote, setAdminNote] = useState<string | null>(null);
 
