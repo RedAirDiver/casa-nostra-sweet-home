@@ -727,7 +727,15 @@ function AdminPage() {
             try {
               const normalizedEmail = adminEmail.trim().toLowerCase();
               const pwd = adminPassword.trim();
-              if (pwd) await createAccount(normalizedEmail, pwd);
+              if (pwd) {
+                await createAccount(normalizedEmail, pwd);
+                // Kontot kan redan finnas – sätt lösenordet explicit.
+                const { error: pwError } = await supabase.rpc("admin_set_password", {
+                  _email: normalizedEmail,
+                  _password: pwd,
+                });
+                if (pwError) throw pwError;
+              }
               const { data: granted, error: rpcError } = await supabase.rpc("grant_admin_by_email", {
                 _email: normalizedEmail,
               });
