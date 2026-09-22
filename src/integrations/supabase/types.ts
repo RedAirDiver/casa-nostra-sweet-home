@@ -204,6 +204,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_password: {
+        Args: { _email: string; _password: string }
+        Returns: boolean
+      }
       claim_first_admin: { Args: never; Returns: boolean }
       grant_admin_by_email: { Args: { _email: string }; Returns: boolean }
       has_role: {
