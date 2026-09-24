@@ -27,3 +27,4 @@
 .rte-surface hr{border-top:1px solid rgba(255,255,255,.18)}
 .rte-hint{padding:10px 14px;font-size:.8rem;color:rgba(255,255,255,.45);background:rgba(255,255,255,.02);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .prose-editor:empty:before{content:attr(data-placeholder);opacity:.4}
+.footer-foodora{height:19px;width:auto;display:block}
