@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { Facebook, Instagram } from "lucide-react";
 import { getSiteContent } from "@/lib/menu.functions";
 import { mediaUrl } from "@/lib/media";
 
@@ -95,7 +96,7 @@ function Index() {
 
     <section id="hitta" className="visit"><div><p className="eyebrow">Besök oss</p><h2>Hitta hit</h2><Info title="Adress"><a target="_blank" rel="noreferrer" href="https://maps.google.com/?q=Williams+v%C3%A4g+2,+635+06+Eskilstuna">Williams väg 2, 635 06 Eskilstuna</a></Info><Info title="Öppettider"><div className="hours"><small>Sommartid</small><span>Måndag–fredag</span><span>11:00–21:00</span><span>Lördag–söndag</span><span>12:00–21:00</span><small>Vintertid</small><span>Måndag–torsdag</span><span>11:00–20:00</span><span>Fredag</span><span>11:00–21:00</span><span>Lördag</span><span>12:00–21:00</span><span>Söndag</span><span>12:00–20:00</span></div></Info><Info title="Telefon"><a href="tel:016-2004909">016-200 49 09</a><a className="mail" href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></Info></div><div className="map"><iframe title="Karta" src="https://www.openstreetmap.org/export/embed.html?bbox=16.6650%2C59.3560%2C16.7150%2C59.3760&layer=mapnik&marker=59.3660%2C16.6900" /></div></section>
 
-    <footer><div className="footer-grid"><div><h3>Casa <em>Nostra</em> Kjula</h3><p>Italienskt kök i Kjula – pizza, pasta, sallader och à la carte. Fullständiga rättigheter.</p><div className="social"><a href="https://instagram.com/casanostrakjula">Instagram</a></div></div><div><h3>Kjula</h3><p>Williams väg 2, 635 06 Eskilstuna</p><a href="tel:016-2004909">016-200 49 09</a><a href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></div><div><p className="gold-label">Sidor</p>{nav.filter((_,i) => [0,1,3,6].includes(i)).map(([l,h]) => <a href={h} key={l}>{l}</a>)}<Link to="/auth">Logga in</Link></div></div><div className="copyright">© 2026 Casa Nostra Kjula</div></footer>
+    <footer><div className="footer-grid"><div><h3>Casa <em>Nostra</em> Kjula</h3><p>Italienskt kök i Kjula – pizza, pasta, sallader och à la carte. Fullständiga rättigheter.</p><div className="social"><a href="https://instagram.com/casanostrakjula" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Instagram"><Instagram size={19} aria-hidden="true" /><span>Instagram</span></a><a href="https://facebook.com/casanostrakjula" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Facebook"><Facebook size={19} aria-hidden="true" /><span>Facebook</span></a></div></div><div><h3>Kjula</h3><p>Williams väg 2, 635 06 Eskilstuna</p><a href="tel:016-2004909">016-200 49 09</a><a href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></div><div><p className="gold-label">Sidor</p>{nav.filter((_,i) => [0,1,3,6].includes(i)).map(([l,h]) => <a href={h} key={l}>{l}</a>)}<Link to="/auth">Logga in</Link></div></div><div className="copyright">© 2026 Casa Nostra Kjula</div></footer>
   </main>;
 }
 
