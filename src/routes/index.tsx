@@ -14,6 +14,18 @@ function TripAdvisorIcon({ size = 19 }: { size?: number }) {
     </svg>
   );
 }
+
+function FoodoraIcon({ size = 19 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="5" r="1" fill="currentColor" stroke="none" />
+      <path d="M9.5 6.5C7.5 8 5.5 11.5 5.5 15c0 3 1.5 5 4 5s4-1.5 4-3.5" />
+      <path d="M9.5 6.5C11 5.5 13.5 5.5 15 7.5c1.3 1.7 1.2 4.2 0 5.5" />
+      <path d="M13.5 16.5c1 2.5 3 4 5.5 4" />
+ge    </svg>
+  );
+}
+
 import { getSiteContent } from "@/lib/menu.functions";
 import { mediaUrl } from "@/lib/media";
 
