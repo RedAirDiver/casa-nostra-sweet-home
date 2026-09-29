@@ -110,14 +110,16 @@ function Index() {
 
     {news.length > 0 && <section id="nyheter" className="section news-section">
       <div className="section-heading"><div><p className="eyebrow">Aktuellt</p><h2>Senaste nytt</h2></div></div>
-      <div className="news-grid">{news.map((p) => <article className="news-card" key={p.id}>
-        {mediaUrl(p.image_url) && <img src={mediaUrl(p.image_url)!} alt={p.title} loading="lazy" />}
+      <div className="news-grid">{news.map((p) => {
+        const src = mediaUrl(p.image_url);
+        return <article className="news-card" key={p.id}>
+        {src && <img className="gallery-zoom" src={src} alt={p.title} loading="lazy" onClick={() => setLightbox(src)} />}
         <div className="news-body">
           <time dateTime={p.published_at}>{dateFormatter.format(new Date(p.published_at))}</time>
           <h3>{p.title}</h3>
           {p.body && <div className="news-text" dangerouslySetInnerHTML={{ __html: p.body }} />}
         </div>
-      </article>)}</div>
+      </article>;})}</div>
     </section>}
 
     <section id="hitta" className="visit"><div><p className="eyebrow">Besök oss</p><h2>Hitta hit</h2><Info title="Adress"><a target="_blank" rel="noreferrer" href="https://www.google.com/maps/search/?api=1&query=Casa+Nostra+Kjula%2C+Williams+v%C3%A4g+2%2C+635+06+Eskilstuna">Williams väg 2, 635 06 Eskilstuna</a></Info><Info title="Öppettider"><div className="hours"><small>Sommartid</small><span>Måndag–fredag</span><span>11:00–21:00</span><span>Lördag–söndag</span><span>12:00–21:00</span><small>Vintertid</small><span>Måndag–torsdag</span><span>11:00–20:00</span><span>Fredag</span><span>11:00–21:00</span><span>Lördag</span><span>12:00–21:00</span><span>Söndag</span><span>12:00–20:00</span></div></Info><Info title="Telefon"><a href="tel:016-2004909">016-200 49 09</a><a className="mail" href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></Info></div><div className="map"><iframe title="Google Maps – Casa Nostra Kjula" src="https://www.google.com/maps?q=Casa+Nostra+Kjula%2C+Williams+v%C3%A4g+2%2C+635+06+Eskilstuna&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen /></div></section>
