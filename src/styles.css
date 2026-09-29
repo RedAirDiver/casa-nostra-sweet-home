@@ -28,3 +28,10 @@
 .rte-hint{padding:10px 14px;font-size:.8rem;color:rgba(255,255,255,.45);background:rgba(255,255,255,.02);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .prose-editor:empty:before{content:attr(data-placeholder);opacity:.4}
 .footer-foodora{height:19px;width:auto;display:block}
+.gallery-zoom{cursor:zoom-in;transition:opacity .2s,transform .3s}
+.gallery-zoom:hover{opacity:.9}
+.lightbox{position:fixed;z-index:100;inset:0;background:color-mix(in oklch,var(--background) 92%,transparent);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vw,64px);cursor:zoom-out;animation:lightbox-in .2s ease}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 24px 80px rgba(0,0,0,.6);cursor:default}
+.lightbox-close{position:absolute;top:18px;right:22px;width:46px;height:46px;border-radius:50%;border:1px solid var(--border);background:color-mix(in oklch,var(--surface) 80%,transparent);color:var(--foreground);font-size:26px;line-height:1;cursor:pointer}
+.lightbox-close:hover{color:var(--gold);border-color:var(--gold)}
+@keyframes lightbox-in{from{opacity:0}to{opacity:1}}
