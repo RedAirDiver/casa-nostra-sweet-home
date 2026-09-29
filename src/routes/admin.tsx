@@ -108,7 +108,7 @@ async function prepareImage(file: File): Promise<Blob> {
     // Insert our own JFIF marker first; remove an existing JFIF marker to avoid conflicting density tags.
     const existingJfif = bytes[2] === 0xff && bytes[3] === 0xe0 &&
       String.fromCharCode(...bytes.slice(6, 11)) === "JFIF\0";
-    const end = existingJfif ? 4 + (bytes[4] << 8) + bytes[5] : 2;
+    const end = existingJfif ? 4 + ((bytes[4] ?? 0) << 8) + (bytes[5] ?? 0) : 2;
     const output = new Uint8Array(2 + jfif.length + bytes.length - end);
     output.set(bytes.subarray(0, 2));
     output.set(jfif, 2);
