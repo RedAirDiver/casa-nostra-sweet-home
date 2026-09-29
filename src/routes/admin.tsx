@@ -75,11 +75,56 @@ const input =
 const btn = "rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground";
 const ghost = "rounded-md border border-border px-3 py-2 text-sm text-muted-foreground";
 
+async function prepareImage(file: File): Promise<Blob> {
+  if (!file.type.startsWith("image/")) throw new Error("Välj en bildfil.");
+
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    throw new Error("Bilden kunde inte läsas. Prova en JPG-, PNG- eller WebP-bild.");
+  }
+
+  try {
+    const width = Math.min(bitmap.width, 500);
+    const height = Math.max(1, Math.round(bitmap.height * width / bitmap.width));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Bilden kunde inte bearbetas.");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+
+    const encoded = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Bilden kunde inte sparas.")), "image/jpeg", 0.8);
+    });
+
+    // Canvas leaves JPEG density browser-dependent. Set JFIF units to inches and 72 × 72 DPI.
+    const bytes = new Uint8Array(await encoded.arrayBuffer());
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8) throw new Error("Bilden kunde inte sparas som JPG.");
+    const jfif = new Uint8Array([0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00]);
+    // Insert our own JFIF marker first; remove an existing JFIF marker to avoid conflicting density tags.
+    const existingJfif = bytes[2] === 0xff && bytes[3] === 0xe0 &&
+      String.fromCharCode(...bytes.slice(6, 11)) === "JFIF\0";
+    const end = existingJfif ? 4 + (bytes[4] << 8) + bytes[5] : 2;
+    const output = new Uint8Array(2 + jfif.length + bytes.length - end);
+    output.set(bytes.subarray(0, 2));
+    output.set(jfif, 2);
+    output.set(bytes.subarray(end), 2 + jfif.length);
+    return new Blob([output], { type: "image/jpeg" });
+  } finally {
+    bitmap.close();
+  }
+}
+
 async function uploadFile(file: File): Promise<string> {
-  const ext = file.name.split(".").pop() ?? "jpg";
-  const path = `${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("menu-media").upload(path, file, {
+  const image = await prepareImage(file);
+  const path = `${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from("menu-media").upload(path, image, {
     cacheControl: "300",
+    contentType: "image/jpeg",
     upsert: false,
   });
   if (error) throw error;
