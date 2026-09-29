@@ -86,7 +86,7 @@ async function prepareImage(file: File): Promise<Blob> {
   }
 
   try {
-    const width = Math.min(bitmap.width, 500);
+    const width = Math.min(bitmap.width, 1000);
     const height = Math.max(1, Math.round(bitmap.height * width / bitmap.width));
     const canvas = document.createElement("canvas");
     canvas.width = width;
