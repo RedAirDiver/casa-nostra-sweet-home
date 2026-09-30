@@ -550,22 +550,6 @@ function AdminPage() {
                     </button>
                   </div>
                   <label className="text-xs text-muted-foreground">
-                    Nr på menyn
-                    <input
-                      className={`${input} mt-1`}
-                      placeholder="t.ex. 01"
-                      defaultValue={it.item_number ?? ""}
-                      onBlur={(e) =>
-                        run(() =>
-                          supabase
-                            .from("menu_items")
-                            .update({ item_number: e.target.value })
-                            .eq("id", it.id),
-                        )
-                      }
-                    />
-                  </label>
-                  <label className="text-xs text-muted-foreground">
                     Namn
                     <input
                       className={`${input} mt-1`}
