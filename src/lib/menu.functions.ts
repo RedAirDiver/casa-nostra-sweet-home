@@ -166,7 +166,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     for (const n of news) n.image_url = sign(n.image_url);
   }
 
-  return { categories, gallery, news };
+  return { categories, gallery, news, offers };
   } catch {
     return empty;
   }
