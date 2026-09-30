@@ -40,7 +40,7 @@ export const Route = createFileRoute("/")({
     try {
       return await getSiteContent();
     } catch {
-      return { categories: [], gallery: [], news: [] };
+      return { categories: [], gallery: [], news: [], offers: [] };
     }
   },
   component: Index,
