@@ -99,7 +99,7 @@ function Index() {
         <h3>{c.name}</h3>
         {c.description && <p className="menu-group-desc">{c.description}</p>}
         <div className="menu-list">{c.items.map((item) => <div className="menu-row" key={item.id}>
-          <div><strong>{item.item_number ? `${item.item_number}. ` : ""}{item.name}</strong>{item.description && <span>{item.description}</span>}</div>
+          <div><strong>{item.name}</strong>{item.description && <span>{item.description}</span>}</div>
           {formatPrice(item.price, item.price_large) && <b>{formatPrice(item.price, item.price_large)}</b>}
         </div>)}</div>
       </div>)}
