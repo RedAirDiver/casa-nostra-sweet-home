@@ -30,6 +30,15 @@ export type NewsPost = {
   published_at: string;
 };
 
+export type SpecialOffer = {
+  id: string;
+  label: string;
+  price: string;
+  price_note: string | null;
+  body: string | null;
+  footnote: string | null;
+};
+
 function publicClient() {
   const key =
     process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
