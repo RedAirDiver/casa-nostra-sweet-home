@@ -65,7 +65,7 @@ function ArrowLink({ href, children, external = false }: { href: string; childre
 function Index() {
   const [open, setOpen] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
-  const { categories, gallery, news } = Route.useLoaderData();
+  const { categories, gallery, news, offers } = Route.useLoaderData();
 
   useEffect(() => {
     if (!lightbox) return;
@@ -90,7 +90,7 @@ function Index() {
       <div className="hero-content"><p className="eyebrow">Ristorante · Kjula</p><h1>Casa Nostra</h1><p className="intro">Mötesplatsen för dig och det italienska köket. Med stor erfarenhet och passion för goda råvaror välkomnas du alltid med omsorg – och lämnar med ett leende. Fullständiga rättigheter.</p><div className="hero-links"><ArrowLink href="#meny">Utforska menyn</ArrowLink><ArrowLink href="tel:016-2004909">Ring & beställ</ArrowLink><ArrowLink external href="https://irp.cdn-website.com/6e599bd4/files/uploaded/Meny_Casa+Nostra+Kjula+A4_2025-2.pdf">Ladda ner menyn (PDF)</ArrowLink></div></div>
     </section>
 
-    <section id="lunch" className="offers"><article><p className="gold-label">Dagens lunch</p><div className="price"><strong>149:-</strong><span>Måndag–fredag kl. 11–14.30</span></div><p>Sallad nr 1, 2, 3, 6, 7, 8<br/>Pasta nr 1, 2, 5, 6, 8, 9, 10, 11, 12<br/>Pizzor nr 4–22 & 29</p></article><article><p className="gold-label">Kvällsdeal</p><div className="price"><strong>209:-</strong><span>Alla dagar 15–19 · äta här</span></div><p>Välj mellan utvalda pizzor, pasta eller fläskfilé Oscar – inkl. öl eller vin. Alkoholfritt alternativ finns.</p><small>Pasta nr 1, 2, 5, 6, 8–12 · Pizzor nr 4–22 & 29</small></article></section>
+    {offers.length > 0 && <section id="lunch" className="offers">{offers.map((o) => <article key={o.id}><p className="gold-label">{o.label}</p><div className="price"><strong>{o.price}</strong>{o.price_note && <span>{o.price_note}</span>}</div>{o.body && <p>{o.body.split("\n").map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}</p>}{o.footnote && <small>{o.footnote}</small>}</article>)}</section>}
 
     <section id="meny" className="section menu-section">
       <div className="section-heading"><div><p className="eyebrow">Vår meny</p><h2>Våra rätter</h2></div><a className="gold-link" href="tel:016-2004909">Ring & beställ →</a></div>
