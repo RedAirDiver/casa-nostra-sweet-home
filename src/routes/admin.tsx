@@ -327,6 +327,22 @@ function AdminPage() {
     });
   }
 
+  function moveGallery(from: number, to: number) {
+    if (from < 0 || to < 0 || to >= gallery.length || from === to) return;
+    const reordered = [...gallery];
+    const [moved] = reordered.splice(from, 1);
+    if (!moved) return;
+    reordered.splice(to, 0, moved);
+    setGallery(reordered.map((x, i) => ({ ...x, sort_order: i + 1 })));
+    run(async () => {
+      await Promise.all(
+        reordered.map((x, i) =>
+          supabase.from("gallery_images").update({ sort_order: i + 1 }).eq("id", x.id),
+        ),
+      );
+    });
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -686,9 +702,30 @@ function AdminPage() {
       {tab === "galleri" && (
       <section className="mt-10 pb-20">
         <h2 className="font-[var(--serif)] text-2xl">Galleri</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Dra i ⋮⋮ (eller använd pilarna) för att ändra ordningen på bilderna.
+        </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {gallery.map((g) => (
-            <div key={g.id} className="rounded-lg border border-border p-3">
+          {gallery.map((g, idx) => (
+            <div
+              key={g.id}
+              className={`rounded-lg border p-3 ${dragOverId === g.id ? "border-[var(--gold,#c9a24a)]" : "border-border"} ${dragId === g.id ? "opacity-50" : ""}`}
+              onDragOver={(e) => {
+                if (!dragId) return;
+                e.preventDefault();
+                setDragOverId(g.id);
+              }}
+              onDragLeave={() => setDragOverId((p) => (p === g.id ? null : p))}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragId && dragId !== g.id) {
+                  const from = gallery.findIndex((x) => x.id === dragId);
+                  moveGallery(from, idx);
+                }
+                setDragId(null);
+                setDragOverId(null);
+              }}
+            >
               <StoredImage
                 path={g.image_url}
                 alt={g.caption ?? "Galleribild"}
