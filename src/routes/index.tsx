@@ -52,7 +52,8 @@ const dateFormatter = new Intl.DateTimeFormat("sv-SE", { day: "numeric", month: 
 
 function formatPrice(price: number | null, priceLarge: number | null) {
   if (price === null && priceLarge === null) return null;
-  const parts = [price, priceLarge].filter((p): p is number => p !== null).map((p) => String(Math.round(p)));
+  const parts = [price, priceLarge].filter((p): p is number => p !== null && p > 0).map((p) => String(Math.round(p)));
+  if (parts.length === 0) return null;
   return `${parts.join("/")}:-`;
 }
 

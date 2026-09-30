@@ -52,6 +52,12 @@ type Item = {
   sort_order: number;
 };
 type Gallery = { id: string; image_url: string; caption: string | null; sort_order: number };
+
+// Empty or 0 means "no price".
+function toPrice(v: string): number | null {
+  const n = Number(v);
+  return v.trim() === "" || !Number.isFinite(n) || n <= 0 ? null : n;
+}
 type News = {
   id: string;
   title: string;
@@ -137,6 +143,8 @@ function AdminPage() {
   const [email, setEmail] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<Gallery[]>([]);
   const [news, setNews] = useState<News[]>([]);
   const [tab, setTab] = useState<Tab>("meny");
@@ -268,6 +276,27 @@ function AdminPage() {
   }
 
   const catItems = items.filter((i) => i.category_id === activeCategory);
+
+  function moveItem(from: number, to: number) {
+    if (from < 0 || to < 0 || to >= catItems.length || from === to) return;
+    const reordered = [...catItems];
+    const [moved] = reordered.splice(from, 1);
+    if (!moved) return;
+    reordered.splice(to, 0, moved);
+    const orderMap = new Map(reordered.map((x, i) => [x.id, i + 1]));
+    setItems((prev) =>
+      prev
+        .map((x) => (orderMap.has(x.id) ? { ...x, sort_order: orderMap.get(x.id)! } : x))
+        .sort((a, b) => a.sort_order - b.sort_order),
+    );
+    run(async () => {
+      await Promise.all(
+        reordered.map((x, i) =>
+          supabase.from("menu_items").update({ sort_order: i + 1 }).eq("id", x.id),
+        ),
+      );
+    });
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
@@ -413,76 +442,131 @@ function AdminPage() {
           <h2 className="font-[var(--serif)] text-2xl">
             Rätter i {categories.find((c) => c.id === activeCategory)?.name}
           </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Dra i ⋮⋮ (eller använd pilarna) för att ändra ordningen på rätterna. Lämna "Pris 2"
+            tomt om rätten bara har ett pris.
+          </p>
           <div className="mt-4 flex flex-col gap-3">
-            {catItems.map((it) => (
-              <div key={it.id} className="rounded-lg border border-border p-4">
-                <div className="grid gap-3 md:grid-cols-[70px_1fr_90px_90px_70px]">
-                  <input
-                    className={input}
-                    placeholder="Nr"
-                    defaultValue={it.item_number ?? ""}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase
-                          .from("menu_items")
-                          .update({ item_number: e.target.value })
-                          .eq("id", it.id),
-                      )
-                    }
-                  />
-                  <input
-                    className={input}
-                    defaultValue={it.name}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase.from("menu_items").update({ name: e.target.value }).eq("id", it.id),
-                      )
-                    }
-                  />
-                  <input
-                    className={input}
-                    type="number"
-                    placeholder="Pris"
-                    defaultValue={it.price ?? ""}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase
-                          .from("menu_items")
-                          .update({ price: e.target.value === "" ? null : Number(e.target.value) })
-                          .eq("id", it.id),
-                      )
-                    }
-                  />
-                  <input
-                    className={input}
-                    type="number"
-                    placeholder="Familj"
-                    defaultValue={it.price_large ?? ""}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase
-                          .from("menu_items")
-                          .update({
-                            price_large: e.target.value === "" ? null : Number(e.target.value),
-                          })
-                          .eq("id", it.id),
-                      )
-                    }
-                  />
-                  <input
-                    className={input}
-                    type="number"
-                    defaultValue={it.sort_order}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase
-                          .from("menu_items")
-                          .update({ sort_order: Number(e.target.value) })
-                          .eq("id", it.id),
-                      )
-                    }
-                  />
+            {catItems.map((it, idx) => (
+              <div
+                key={it.id}
+                className={`rounded-lg border p-4 ${dragOverId === it.id ? "border-[var(--gold,#c9a24a)]" : "border-border"} ${dragId === it.id ? "opacity-50" : ""}`}
+                onDragOver={(e) => {
+                  if (!dragId) return;
+                  e.preventDefault();
+                  setDragOverId(it.id);
+                }}
+                onDragLeave={() => setDragOverId((p) => (p === it.id ? null : p))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragId && dragId !== it.id) {
+                    const from = catItems.findIndex((x) => x.id === dragId);
+                    moveItem(from, idx);
+                  }
+                  setDragId(null);
+                  setDragOverId(null);
+                }}
+              >
+                <div className="grid items-end gap-3 md:grid-cols-[40px_70px_1fr_90px_90px]">
+                  <div className="flex flex-col items-center gap-1">
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      disabled={idx === 0}
+                      onClick={() => moveItem(idx, idx - 1)}
+                      aria-label="Flytta upp"
+                    >
+                      ▲
+                    </button>
+                    <span
+                      draggable
+                      onDragStart={(e) => {
+                        setDragId(it.id);
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragEnd={() => {
+                        setDragId(null);
+                        setDragOverId(null);
+                      }}
+                      className="cursor-grab select-none text-lg leading-none text-muted-foreground"
+                      title="Dra för att flytta"
+                    >
+                      ⋮⋮
+                    </span>
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                      disabled={idx === catItems.length - 1}
+                      onClick={() => moveItem(idx, idx + 1)}
+                      aria-label="Flytta ner"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                  <label className="text-xs text-muted-foreground">
+                    Nr på menyn
+                    <input
+                      className={`${input} mt-1`}
+                      placeholder="t.ex. 01"
+                      defaultValue={it.item_number ?? ""}
+                      onBlur={(e) =>
+                        run(() =>
+                          supabase
+                            .from("menu_items")
+                            .update({ item_number: e.target.value })
+                            .eq("id", it.id),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="text-xs text-muted-foreground">
+                    Namn
+                    <input
+                      className={`${input} mt-1`}
+                      defaultValue={it.name}
+                      onBlur={(e) =>
+                        run(() =>
+                          supabase.from("menu_items").update({ name: e.target.value }).eq("id", it.id),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="text-xs text-muted-foreground">
+                    Pris (kr)
+                    <input
+                      className={`${input} mt-1`}
+                      type="number"
+                      placeholder="Pris"
+                      defaultValue={it.price ?? ""}
+                      onBlur={(e) =>
+                        run(() =>
+                          supabase
+                            .from("menu_items")
+                            .update({ price: toPrice(e.target.value) })
+                            .eq("id", it.id),
+                        )
+                      }
+                    />
+                  </label>
+                  <label className="text-xs text-muted-foreground">
+                    Pris 2 (valfritt)
+                    <input
+                      className={`${input} mt-1`}
+                      type="number"
+                      placeholder="Tomt = inget"
+                      defaultValue={it.price_large ?? ""}
+                      onBlur={(e) =>
+                        run(() =>
+                          supabase
+                            .from("menu_items")
+                            .update({ price_large: toPrice(e.target.value) })
+                            .eq("id", it.id),
+                        )
+                      }
+                    />
+                  </label>
                 </div>
+
                 <textarea
                   className={`${input} mt-3`}
                   rows={2}
