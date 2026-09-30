@@ -65,6 +65,7 @@ type Offer = {
 };
 
 const menuPriceSchema = z.string().trim().regex(/^(?:[1-9]\d{0,4}(?:\/[1-9]\d{0,4})?)?$/);
+const menuNumberSchema = z.string().trim().regex(/^\d{0,4}$/);
 
 function menuPriceValue(price: number | null, priceLarge: number | null) {
   return [price, priceLarge].filter((value) => value !== null && value > 0).join("/");
@@ -164,6 +165,7 @@ function AdminPage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [priceErrors, setPriceErrors] = useState<Record<string, string>>({});
+  const [numberErrors, setNumberErrors] = useState<Record<string, string>>({});
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
@@ -514,7 +516,7 @@ function AdminPage() {
                   setDragOverId(null);
                 }}
               >
-                <div className="grid items-end gap-3 md:grid-cols-[40px_minmax(0,1fr)_150px]">
+                <div className="grid items-end gap-3 md:grid-cols-[40px_76px_minmax(0,1fr)_150px]">
                   <div className="flex flex-col items-center gap-1">
                     <button
                       type="button"
@@ -550,6 +552,33 @@ function AdminPage() {
                       ▼
                     </button>
                   </div>
+                  <label className="text-xs text-muted-foreground">
+                    Nr på menyn
+                    <input
+                      className={`${input} mt-1`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      placeholder="Nr"
+                      defaultValue={it.item_number ?? ""}
+                      aria-invalid={Boolean(numberErrors[it.id])}
+                      aria-describedby={numberErrors[it.id] ? `number-error-${it.id}` : undefined}
+                      onBlur={(e) => {
+                        const parsed = menuNumberSchema.safeParse(e.target.value);
+                        if (!parsed.success) {
+                          setNumberErrors((prev) => ({ ...prev, [it.id]: "Ange bara siffror." }));
+                          return;
+                        }
+                        setNumberErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[it.id];
+                          return next;
+                        });
+                        run(() => supabase.from("menu_items").update({ item_number: parsed.data || null }).eq("id", it.id));
+                      }}
+                    />
+                    {numberErrors[it.id] && <span id={`number-error-${it.id}`} className="mt-1 block text-destructive">{numberErrors[it.id]}</span>}
+                  </label>
                   <label className="text-xs text-muted-foreground">
                     Namn
                     <input
