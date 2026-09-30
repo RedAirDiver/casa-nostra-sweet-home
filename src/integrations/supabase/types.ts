@@ -178,6 +178,45 @@ export type Database = {
         }
         Relationships: []
       }
+      special_offers: {
+        Row: {
+          body: string | null
+          created_at: string
+          footnote: string | null
+          id: string
+          is_published: boolean
+          label: string
+          price: string
+          price_note: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          footnote?: string | null
+          id?: string
+          is_published?: boolean
+          label: string
+          price?: string
+          price_note?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          footnote?: string | null
+          id?: string
+          is_published?: boolean
+          label?: string
+          price?: string
+          price_note?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

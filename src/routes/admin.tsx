@@ -52,6 +52,16 @@ type Item = {
   sort_order: number;
 };
 type Gallery = { id: string; image_url: string; caption: string | null; sort_order: number };
+type Offer = {
+  id: string;
+  label: string;
+  price: string;
+  price_note: string | null;
+  body: string | null;
+  footnote: string | null;
+  sort_order: number;
+  is_published: boolean;
+};
 
 // Empty or 0 means "no price".
 function toPrice(v: string): number | null {
@@ -74,7 +84,7 @@ type Admin = {
   isSelf: boolean;
 };
 
-type Tab = "meny" | "galleri" | "nyheter" | "agare";
+type Tab = "meny" | "galleri" | "nyheter" | "erbjudanden" | "agare";
 
 const input =
   "w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
@@ -147,6 +157,7 @@ function AdminPage() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<Gallery[]>([]);
   const [news, setNews] = useState<News[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [tab, setTab] = useState<Tab>("meny");
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -187,16 +198,18 @@ function AdminPage() {
   }, [tab, loadAdmins]);
 
   const load = useCallback(async () => {
-    const [c, i, g, n] = await Promise.all([
+    const [c, i, g, n, o] = await Promise.all([
       supabase.from("menu_categories").select("*").order("sort_order"),
       supabase.from("menu_items").select("*").order("sort_order"),
       supabase.from("gallery_images").select("*").order("sort_order"),
       supabase.from("news_posts").select("*").order("published_at", { ascending: false }),
+      supabase.from("special_offers").select("*").order("sort_order"),
     ]);
     setNews((n.data ?? []) as News[]);
     setCategories((c.data ?? []) as Category[]);
     setItems((i.data ?? []) as Item[]);
     setGallery((g.data ?? []) as Gallery[]);
+    setOffers((o.data ?? []) as Offer[]);
     setActiveCategory((prev) => prev ?? (c.data?.[0]?.id ?? null));
   }, []);
 
@@ -320,6 +333,7 @@ function AdminPage() {
           ["meny", "Meny"],
           ["galleri", "Galleri"],
           ["nyheter", "Nyheter"],
+          ["erbjudanden", "Lunch & deal"],
           ["agare", "Ägare"],
         ] as [Tab, string][]).map(([key, label]) => (
           <button key={key} className={tab === key ? btn : ghost} onClick={() => setTab(key)}>
@@ -828,6 +842,160 @@ function AdminPage() {
                   onClick={() => {
                     if (confirm(`Ta bort inlägget "${n.title}"?`))
                       run(() => supabase.from("news_posts").delete().eq("id", n.id));
+                  }}
+                >
+                  Ta bort
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+      )}
+      {tab === "erbjudanden" && (
+      <section className="mt-10 pb-20">
+        <h2 className="font-[var(--serif)] text-2xl">Lunch & deal</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Boxarna som visas överst på startsidan (Dagens lunch och Kvällsdeal). Radbryt i
+          beskrivningsfältet för nya rader.
+        </p>
+        <button
+          className={`${btn} mt-4`}
+          onClick={() =>
+            run(() =>
+              supabase.from("special_offers").insert({
+                label: "Ny box",
+                price: "",
+                sort_order: offers.length + 1,
+              }),
+            )
+          }
+        >
+          + Ny box
+        </button>
+        <div className="mt-6 flex flex-col gap-5">
+          {offers.map((o) => (
+            <article key={o.id} className="rounded-lg border border-border p-4">
+              <div className="grid gap-3 md:grid-cols-[1fr_120px_1fr_90px]">
+                <label className="text-xs text-muted-foreground">
+                  Rubrik
+                  <input
+                    className={`${input} mt-1`}
+                    defaultValue={o.label}
+                    onBlur={(e) =>
+                      run(() =>
+                        supabase
+                          .from("special_offers")
+                          .update({ label: e.target.value })
+                          .eq("id", o.id),
+                      )
+                    }
+                  />
+                </label>
+                <label className="text-xs text-muted-foreground">
+                  Pris
+                  <input
+                    className={`${input} mt-1`}
+                    placeholder="t.ex. 149:-"
+                    defaultValue={o.price}
+                    onBlur={(e) =>
+                      run(() =>
+                        supabase
+                          .from("special_offers")
+                          .update({ price: e.target.value })
+                          .eq("id", o.id),
+                      )
+                    }
+                  />
+                </label>
+                <label className="text-xs text-muted-foreground">
+                  Tidsinfo (vid priset)
+                  <input
+                    className={`${input} mt-1`}
+                    placeholder="t.ex. Måndag–fredag kl. 11–14.30"
+                    defaultValue={o.price_note ?? ""}
+                    onBlur={(e) =>
+                      run(() =>
+                        supabase
+                          .from("special_offers")
+                          .update({ price_note: e.target.value })
+                          .eq("id", o.id),
+                      )
+                    }
+                  />
+                </label>
+                <label className="text-xs text-muted-foreground">
+                  Ordning
+                  <input
+                    className={`${input} mt-1`}
+                    type="number"
+                    defaultValue={o.sort_order}
+                    onBlur={(e) =>
+                      run(() =>
+                        supabase
+                          .from("special_offers")
+                          .update({ sort_order: Number(e.target.value) })
+                          .eq("id", o.id),
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <label className="mt-3 block text-xs text-muted-foreground">
+                Beskrivning (ny rad = ny rad på sidan)
+                <textarea
+                  className={`${input} mt-1`}
+                  rows={3}
+                  defaultValue={o.body ?? ""}
+                  onBlur={(e) =>
+                    run(() =>
+                      supabase
+                        .from("special_offers")
+                        .update({ body: e.target.value })
+                        .eq("id", o.id),
+                    )
+                  }
+                />
+              </label>
+
+              <label className="mt-3 block text-xs text-muted-foreground">
+                Fotnot (liten text, valfritt)
+                <input
+                  className={`${input} mt-1`}
+                  defaultValue={o.footnote ?? ""}
+                  onBlur={(e) =>
+                    run(() =>
+                      supabase
+                        .from("special_offers")
+                        .update({ footnote: e.target.value })
+                        .eq("id", o.id),
+                    )
+                  }
+                />
+              </label>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    defaultChecked={o.is_published}
+                    onChange={(e) =>
+                      run(() =>
+                        supabase
+                          .from("special_offers")
+                          .update({ is_published: e.target.checked })
+                          .eq("id", o.id),
+                      )
+                    }
+                  />
+                  Visas på sidan
+                </label>
+                <button
+                  className={ghost}
+                  onClick={() => {
+                    if (confirm(`Ta bort "${o.label}"?`))
+                      run(() => supabase.from("special_offers").delete().eq("id", o.id));
                   }}
                 >
                   Ta bort

@@ -30,6 +30,15 @@ export type NewsPost = {
   published_at: string;
 };
 
+export type SpecialOffer = {
+  id: string;
+  label: string;
+  price: string;
+  price_note: string | null;
+  body: string | null;
+  footnote: string | null;
+};
+
 function publicClient() {
   const key =
     process.env["SUPABASE_PUBLISHABLE_KEY"] || import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
@@ -56,11 +65,12 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     categories: [] as MenuCategory[],
     gallery: [] as GalleryImage[],
     news: [] as NewsPost[],
+    offers: [] as SpecialOffer[],
   };
   if (!supabase) return empty;
 
   try {
-  const [categoriesRes, itemsRes, galleryRes, newsRes] = await Promise.all([
+  const [categoriesRes, itemsRes, galleryRes, newsRes, offersRes] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("id, name, description, image_url, sort_order")
@@ -79,6 +89,11 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
       .eq("is_published", true)
       .order("published_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("special_offers")
+      .select("id, label, price, price_note, body, footnote")
+      .eq("is_published", true)
+      .order("sort_order"),
   ]);
 
   const items = itemsRes.data ?? [];
@@ -114,6 +129,15 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     published_at: n.published_at,
   }));
 
+  const offers: SpecialOffer[] = (offersRes.data ?? []).map((o) => ({
+    id: o.id,
+    label: o.label,
+    price: o.price,
+    price_note: o.price_note,
+    body: o.body,
+    footnote: o.footnote,
+  }));
+
   // Bucket is private: turn storage paths into signed URLs so images load everywhere.
   const isStoragePath = (v: string | null) =>
     Boolean(v) && !/^https?:\/\//i.test(v!) && !v!.startsWith("/");
@@ -142,7 +166,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     for (const n of news) n.image_url = sign(n.image_url);
   }
 
-  return { categories, gallery, news };
+  return { categories, gallery, news, offers };
   } catch {
     return empty;
   }
