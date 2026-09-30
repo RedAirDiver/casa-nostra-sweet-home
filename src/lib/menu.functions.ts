@@ -89,6 +89,11 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
       .eq("is_published", true)
       .order("published_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("special_offers")
+      .select("id, label, price, price_note, body, footnote")
+      .eq("is_published", true)
+      .order("sort_order"),
   ]);
 
   const items = itemsRes.data ?? [];
