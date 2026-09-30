@@ -311,6 +311,22 @@ function AdminPage() {
     });
   }
 
+  function moveOffer(from: number, to: number) {
+    if (from < 0 || to < 0 || to >= offers.length || from === to) return;
+    const reordered = [...offers];
+    const [moved] = reordered.splice(from, 1);
+    if (!moved) return;
+    reordered.splice(to, 0, moved);
+    setOffers(reordered.map((x, i) => ({ ...x, sort_order: i + 1 })));
+    run(async () => {
+      await Promise.all(
+        reordered.map((x, i) =>
+          supabase.from("special_offers").update({ sort_order: i + 1 }).eq("id", x.id),
+        ),
+      );
+    });
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -857,7 +873,8 @@ function AdminPage() {
         <h2 className="font-[var(--serif)] text-2xl">Lunch & deal</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Boxarna som visas överst på startsidan (Dagens lunch och Kvällsdeal). Radbryt i
-          beskrivningsfältet för nya rader.
+          beskrivningsfältet för nya rader. Dra i ⋮⋮ (eller använd pilarna) för att ändra
+          ordningen.
         </p>
         <button
           className={`${btn} mt-4`}
@@ -874,9 +891,62 @@ function AdminPage() {
           + Ny box
         </button>
         <div className="mt-6 flex flex-col gap-5">
-          {offers.map((o) => (
-            <article key={o.id} className="rounded-lg border border-border p-4">
-              <div className="grid gap-3 md:grid-cols-[1fr_120px_1fr_90px]">
+          {offers.map((o, idx) => (
+            <article
+              key={o.id}
+              className={`rounded-lg border p-4 ${dragOverId === o.id ? "border-[var(--gold,#c9a24a)]" : "border-border"} ${dragId === o.id ? "opacity-50" : ""}`}
+              onDragOver={(e) => {
+                if (!dragId) return;
+                e.preventDefault();
+                setDragOverId(o.id);
+              }}
+              onDragLeave={() => setDragOverId((p) => (p === o.id ? null : p))}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragId && dragId !== o.id) {
+                  const from = offers.findIndex((x) => x.id === dragId);
+                  moveOffer(from, idx);
+                }
+                setDragId(null);
+                setDragOverId(null);
+              }}
+            >
+              <div className="grid items-end gap-3 md:grid-cols-[40px_1fr_120px_1fr]">
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                    disabled={idx === 0}
+                    onClick={() => moveOffer(idx, idx - 1)}
+                    aria-label="Flytta upp"
+                  >
+                    ▲
+                  </button>
+                  <span
+                    draggable
+                    onDragStart={(e) => {
+                      setDragId(o.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDragId(null);
+                      setDragOverId(null);
+                    }}
+                    className="cursor-grab select-none text-lg leading-none text-muted-foreground"
+                    title="Dra för att flytta"
+                  >
+                    ⋮⋮
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                    disabled={idx === offers.length - 1}
+                    onClick={() => moveOffer(idx, idx + 1)}
+                    aria-label="Flytta ner"
+                  >
+                    ▼
+                  </button>
+                </div>
                 <label className="text-xs text-muted-foreground">
                   Rubrik
                   <input
@@ -919,22 +989,6 @@ function AdminPage() {
                         supabase
                           .from("special_offers")
                           .update({ price_note: e.target.value })
-                          .eq("id", o.id),
-                      )
-                    }
-                  />
-                </label>
-                <label className="text-xs text-muted-foreground">
-                  Ordning
-                  <input
-                    className={`${input} mt-1`}
-                    type="number"
-                    defaultValue={o.sort_order}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase
-                          .from("special_offers")
-                          .update({ sort_order: Number(e.target.value) })
                           .eq("id", o.id),
                       )
                     }
