@@ -1,0 +1,1 @@
+ALTER TABLE public.menu_items ADD CONSTRAINT menu_items_price_valid CHECK (price IS NULL OR (price > 0 AND price <= 99999 AND price = trunc(price))), ADD CONSTRAINT menu_items_price_large_valid CHECK (price_large IS NULL OR (price_large > 0 AND price_large <= 99999 AND price_large = trunc(price_large)));
