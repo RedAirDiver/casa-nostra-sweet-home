@@ -311,6 +311,22 @@ function AdminPage() {
     });
   }
 
+  function moveOffer(from: number, to: number) {
+    if (from < 0 || to < 0 || to >= offers.length || from === to) return;
+    const reordered = [...offers];
+    const [moved] = reordered.splice(from, 1);
+    if (!moved) return;
+    reordered.splice(to, 0, moved);
+    setOffers(reordered.map((x, i) => ({ ...x, sort_order: i + 1 })));
+    run(async () => {
+      await Promise.all(
+        reordered.map((x, i) =>
+          supabase.from("special_offers").update({ sort_order: i + 1 }).eq("id", x.id),
+        ),
+      );
+    });
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -857,7 +873,8 @@ function AdminPage() {
         <h2 className="font-[var(--serif)] text-2xl">Lunch & deal</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Boxarna som visas överst på startsidan (Dagens lunch och Kvällsdeal). Radbryt i
-          beskrivningsfältet för nya rader.
+          beskrivningsfältet för nya rader. Dra i ⋮⋮ (eller använd pilarna) för att ändra
+          ordningen.
         </p>
         <button
           className={`${btn} mt-4`}
