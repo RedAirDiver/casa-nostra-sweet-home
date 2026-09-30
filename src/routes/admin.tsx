@@ -84,7 +84,7 @@ type Admin = {
   isSelf: boolean;
 };
 
-type Tab = "meny" | "galleri" | "nyheter" | "agare";
+type Tab = "meny" | "galleri" | "nyheter" | "erbjudanden" | "agare";
 
 const input =
   "w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground outline-none focus:border-primary";
@@ -157,6 +157,7 @@ function AdminPage() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [gallery, setGallery] = useState<Gallery[]>([]);
   const [news, setNews] = useState<News[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [tab, setTab] = useState<Tab>("meny");
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
