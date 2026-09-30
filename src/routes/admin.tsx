@@ -52,6 +52,16 @@ type Item = {
   sort_order: number;
 };
 type Gallery = { id: string; image_url: string; caption: string | null; sort_order: number };
+type Offer = {
+  id: string;
+  label: string;
+  price: string;
+  price_note: string | null;
+  body: string | null;
+  footnote: string | null;
+  sort_order: number;
+  is_published: boolean;
+};
 
 // Empty or 0 means "no price".
 function toPrice(v: string): number | null {
