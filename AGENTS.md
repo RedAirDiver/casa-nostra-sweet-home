@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Process admin image uploads in the browser to a maximum width of 1000 pixels as 72-DPI JPEG before storage, so menu, gallery, and news images remain clear when opened larger.
+- Keep menu prices as two nullable numeric columns while editing both through one validated `first/second` text field; this preserves existing public price formatting and data.
