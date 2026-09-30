@@ -994,22 +994,6 @@ function AdminPage() {
                     }
                   />
                 </label>
-                <label className="text-xs text-muted-foreground">
-                  Ordning
-                  <input
-                    className={`${input} mt-1`}
-                    type="number"
-                    defaultValue={o.sort_order}
-                    onBlur={(e) =>
-                      run(() =>
-                        supabase
-                          .from("special_offers")
-                          .update({ sort_order: Number(e.target.value) })
-                          .eq("id", o.id),
-                      )
-                    }
-                  />
-                </label>
               </div>
 
               <label className="mt-3 block text-xs text-muted-foreground">
