@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createClient } from "@supabase/supabase-js";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { StoredImage } from "@/components/StoredImage";
+import { z } from "zod";
 
 async function createAccount(email: string, password: string) {
   const signupClient = createClient(
@@ -63,10 +64,10 @@ type Offer = {
   is_published: boolean;
 };
 
-// Empty or 0 means "no price".
-function toPrice(v: string): number | null {
-  const n = Number(v);
-  return v.trim() === "" || !Number.isFinite(n) || n <= 0 ? null : n;
+const menuPriceSchema = z.string().trim().regex(/^(?:[1-9]\d{0,4}(?:\/[1-9]\d{0,4})?)?$/);
+
+function menuPriceValue(price: number | null, priceLarge: number | null) {
+  return [price, priceLarge].filter((value) => value !== null && value > 0).join("/");
 }
 type News = {
   id: string;
@@ -162,6 +163,7 @@ function AdminPage() {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [priceErrors, setPriceErrors] = useState<Record<string, string>>({});
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
@@ -489,8 +491,7 @@ function AdminPage() {
             Rätter i {categories.find((c) => c.id === activeCategory)?.name}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Dra i ⋮⋮ (eller använd pilarna) för att ändra ordningen på rätterna. Lämna "Pris 2"
-            tomt om rätten bara har ett pris.
+            Dra i ⋮⋮ (eller använd pilarna) för att ändra ordningen på rätterna. Skriv till exempel 150 eller 165/170 för två priser.
           </p>
           <div className="mt-4 flex flex-col gap-3">
             {catItems.map((it, idx) => (
@@ -513,7 +514,7 @@ function AdminPage() {
                   setDragOverId(null);
                 }}
               >
-                <div className="grid items-end gap-3 md:grid-cols-[40px_70px_1fr_90px_90px]">
+                <div className="grid items-end gap-3 md:grid-cols-[40px_minmax(0,1fr)_150px]">
                   <div className="flex flex-col items-center gap-1">
                     <button
                       type="button"
@@ -565,35 +566,32 @@ function AdminPage() {
                     Pris (kr)
                     <input
                       className={`${input} mt-1`}
-                      type="number"
-                      placeholder="Pris"
-                      defaultValue={it.price ?? ""}
-                      onBlur={(e) =>
-                        run(() =>
-                          supabase
-                            .from("menu_items")
-                            .update({ price: toPrice(e.target.value) })
-                            .eq("id", it.id),
-                        )
-                      }
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={11}
+                      placeholder="150 eller 165/170"
+                      aria-invalid={Boolean(priceErrors[it.id])}
+                      aria-describedby={priceErrors[it.id] ? `price-error-${it.id}` : undefined}
+                      defaultValue={menuPriceValue(it.price, it.price_large)}
+                      onBlur={(e) => {
+                        const parsed = menuPriceSchema.safeParse(e.target.value);
+                        if (!parsed.success) {
+                          setPriceErrors((prev) => ({ ...prev, [it.id]: "Ange ett positivt heltal eller två priser, t.ex. 165/170." }));
+                          return;
+                        }
+                        setPriceErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[it.id];
+                          return next;
+                        });
+                        const [first, second] = parsed.data.split("/");
+                        run(() => supabase.from("menu_items").update({
+                          price: first ? Number(first) : null,
+                          price_large: second ? Number(second) : null,
+                        }).eq("id", it.id));
+                      }}
                     />
-                  </label>
-                  <label className="text-xs text-muted-foreground">
-                    Pris 2 (valfritt)
-                    <input
-                      className={`${input} mt-1`}
-                      type="number"
-                      placeholder="Tomt = inget"
-                      defaultValue={it.price_large ?? ""}
-                      onBlur={(e) =>
-                        run(() =>
-                          supabase
-                            .from("menu_items")
-                            .update({ price_large: toPrice(e.target.value) })
-                            .eq("id", it.id),
-                        )
-                      }
-                    />
+                    {priceErrors[it.id] && <span id={`price-error-${it.id}`} className="mt-1 block text-destructive">{priceErrors[it.id]}</span>}
                   </label>
                 </div>
 
