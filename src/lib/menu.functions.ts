@@ -65,11 +65,12 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     categories: [] as MenuCategory[],
     gallery: [] as GalleryImage[],
     news: [] as NewsPost[],
+    offers: [] as SpecialOffer[],
   };
   if (!supabase) return empty;
 
   try {
-  const [categoriesRes, itemsRes, galleryRes, newsRes] = await Promise.all([
+  const [categoriesRes, itemsRes, galleryRes, newsRes, offersRes] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("id, name, description, image_url, sort_order")
