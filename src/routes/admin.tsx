@@ -745,19 +745,39 @@ function AdminPage() {
                 }
               />
               <div className="mt-3 flex items-center gap-2">
-                <input
-                  className={input}
-                  type="number"
-                  defaultValue={g.sort_order}
-                  onBlur={(e) =>
-                    run(() =>
-                      supabase
-                        .from("gallery_images")
-                        .update({ sort_order: Number(e.target.value) })
-                        .eq("id", g.id),
-                    )
-                  }
-                />
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  disabled={idx === 0}
+                  onClick={() => moveGallery(idx, idx - 1)}
+                  aria-label="Flytta upp"
+                >
+                  ▲
+                </button>
+                <span
+                  draggable
+                  onDragStart={(e) => {
+                    setDragId(g.id);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragEnd={() => {
+                    setDragId(null);
+                    setDragOverId(null);
+                  }}
+                  className="cursor-grab select-none text-lg leading-none text-muted-foreground"
+                  title="Dra för att flytta"
+                >
+                  ⋮⋮
+                </span>
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  disabled={idx === gallery.length - 1}
+                  onClick={() => moveGallery(idx, idx + 1)}
+                  aria-label="Flytta ner"
+                >
+                  ▼
+                </button>
                 <button
                   className={ghost}
                   onClick={() => {
