@@ -198,16 +198,18 @@ function AdminPage() {
   }, [tab, loadAdmins]);
 
   const load = useCallback(async () => {
-    const [c, i, g, n] = await Promise.all([
+    const [c, i, g, n, o] = await Promise.all([
       supabase.from("menu_categories").select("*").order("sort_order"),
       supabase.from("menu_items").select("*").order("sort_order"),
       supabase.from("gallery_images").select("*").order("sort_order"),
       supabase.from("news_posts").select("*").order("published_at", { ascending: false }),
+      supabase.from("special_offers").select("*").order("sort_order"),
     ]);
     setNews((n.data ?? []) as News[]);
     setCategories((c.data ?? []) as Category[]);
     setItems((i.data ?? []) as Item[]);
     setGallery((g.data ?? []) as Gallery[]);
+    setOffers((o.data ?? []) as Offer[]);
     setActiveCategory((prev) => prev ?? (c.data?.[0]?.id ?? null));
   }, []);
 
@@ -331,6 +333,7 @@ function AdminPage() {
           ["meny", "Meny"],
           ["galleri", "Galleri"],
           ["nyheter", "Nyheter"],
+          ["erbjudanden", "Lunch & deal"],
           ["agare", "Ägare"],
         ] as [Tab, string][]).map(([key, label]) => (
           <button key={key} className={tab === key ? btn : ghost} onClick={() => setTab(key)}>
