@@ -891,9 +891,62 @@ function AdminPage() {
           + Ny box
         </button>
         <div className="mt-6 flex flex-col gap-5">
-          {offers.map((o) => (
-            <article key={o.id} className="rounded-lg border border-border p-4">
-              <div className="grid gap-3 md:grid-cols-[1fr_120px_1fr_90px]">
+          {offers.map((o, idx) => (
+            <article
+              key={o.id}
+              className={`rounded-lg border p-4 ${dragOverId === o.id ? "border-[var(--gold,#c9a24a)]" : "border-border"} ${dragId === o.id ? "opacity-50" : ""}`}
+              onDragOver={(e) => {
+                if (!dragId) return;
+                e.preventDefault();
+                setDragOverId(o.id);
+              }}
+              onDragLeave={() => setDragOverId((p) => (p === o.id ? null : p))}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragId && dragId !== o.id) {
+                  const from = offers.findIndex((x) => x.id === dragId);
+                  moveOffer(from, idx);
+                }
+                setDragId(null);
+                setDragOverId(null);
+              }}
+            >
+              <div className="grid items-end gap-3 md:grid-cols-[40px_1fr_120px_1fr]">
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                    disabled={idx === 0}
+                    onClick={() => moveOffer(idx, idx - 1)}
+                    aria-label="Flytta upp"
+                  >
+                    ▲
+                  </button>
+                  <span
+                    draggable
+                    onDragStart={(e) => {
+                      setDragId(o.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => {
+                      setDragId(null);
+                      setDragOverId(null);
+                    }}
+                    className="cursor-grab select-none text-lg leading-none text-muted-foreground"
+                    title="Dra för att flytta"
+                  >
+                    ⋮⋮
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
+                    disabled={idx === offers.length - 1}
+                    onClick={() => moveOffer(idx, idx + 1)}
+                    aria-label="Flytta ner"
+                  >
+                    ▼
+                  </button>
+                </div>
                 <label className="text-xs text-muted-foreground">
                   Rubrik
                   <input
