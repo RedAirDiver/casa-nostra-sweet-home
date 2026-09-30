@@ -129,6 +129,15 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     published_at: n.published_at,
   }));
 
+  const offers: SpecialOffer[] = (offersRes.data ?? []).map((o) => ({
+    id: o.id,
+    label: o.label,
+    price: o.price,
+    price_note: o.price_note,
+    body: o.body,
+    footnote: o.footnote,
+  }));
+
   // Bucket is private: turn storage paths into signed URLs so images load everywhere.
   const isStoragePath = (v: string | null) =>
     Boolean(v) && !/^https?:\/\//i.test(v!) && !v!.startsWith("/");
