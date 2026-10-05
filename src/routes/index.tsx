@@ -55,8 +55,8 @@ function formatPrice(price: number | null) {
   return price !== null && price > 0 ? `${Math.round(price)}:-` : null;
 }
 
-function ArrowLink({ href, children, external = false }: { href: string; children: React.ReactNode; external?: boolean }) {
-  return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;
+function ArrowLink({ href, children, external = false, download }: { href: string; children: React.ReactNode; external?: boolean; download?: string }) {
+  return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} download={download}><span>{children}</span><i /><b>→</b></a>;
 }
 
 
@@ -85,7 +85,7 @@ function Index() {
     <section id="top" className="hero">
       <video src={heroVideoUrl} autoPlay muted loop playsInline />
       <div className="hero-shade" />
-      <div className="hero-content"><p className="eyebrow">Ristorante · Kjula</p><h1>Casa Nostra</h1><p className="intro">Mötesplatsen för dig och det italienska köket. Med stor erfarenhet och passion för goda råvaror välkomnas du alltid med omsorg – och lämnar med ett leende. Fullständiga rättigheter.</p><div className="hero-links"><ArrowLink href="#meny">Utforska menyn</ArrowLink><ArrowLink href="tel:016-2004909">Ring & beställ 016-200 49 09</ArrowLink><ArrowLink external href="https://irp.cdn-website.com/6e599bd4/files/uploaded/Meny_Casa+Nostra+Kjula+A4_2025-2.pdf">Ladda ner menyn (PDF)</ArrowLink></div></div>
+      <div className="hero-content"><p className="eyebrow">Ristorante · Kjula</p><h1>Casa Nostra</h1><p className="intro">Mötesplatsen för dig och det italienska köket. Med stor erfarenhet och passion för goda råvaror välkomnas du alltid med omsorg – och lämnar med ett leende. Fullständiga rättigheter.</p><div className="hero-links"><ArrowLink href="#meny">Utforska menyn</ArrowLink><ArrowLink href="tel:016-2004909">Ring & beställ 016-200 49 09</ArrowLink><ArrowLink external href="/meny-casa-nostra.pdf" download="Casa-Nostra-menyn.pdf">Ladda ner menyn (PDF)</ArrowLink></div></div>
     </section>
 
     {offers.length > 0 && <section id="lunch" className="offers">{Array.from(new Set(offers.map((o) => o.group_name || "Lunch & deal"))).map((group) => <div className="offer-group" key={group}>{group !== "Lunch & deal" && <h2>{group}</h2>}<div className="offer-grid">{offers.filter((o) => (o.group_name || "Lunch & deal") === group).map((o) => <article key={o.id} className={o.image_url && !o.label && !o.price && !o.price_note && !o.body && !o.footnote ? "offer-image-only" : ""}>{o.image_url && <img className="gallery-zoom" src={mediaUrl(o.image_url) ?? ""} alt={o.label || group} loading="lazy" onClick={() => { const src = mediaUrl(o.image_url); if (src) setLightbox(src); }} />}{o.label && <p className="gold-label">{o.label}</p>}{(o.price || o.price_note) && <div className="price">{o.price && <strong>{o.price}</strong>}{o.price_note && <span>{o.price_note}</span>}</div>}{o.body && <p>{o.body.split("\n").map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}</p>}{o.footnote && <small>{o.footnote}</small>}</article>)}</div></div>)}</section>}
