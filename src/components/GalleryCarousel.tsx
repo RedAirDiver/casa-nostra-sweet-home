@@ -12,7 +12,6 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
 }) {
   const [selected, setSelected] = useState(0);
   const [visible, setVisible] = useState(false);
-  const [interacting, setInteracting] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -45,13 +44,17 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
     return () => motion.removeEventListener("change", update);
   }, []);
 
+  const manualUntilRef = useRef(0);
+  const markManual = useCallback(() => { manualUntilRef.current = Date.now() + 9000; }, []);
+
   useEffect(() => {
-    if (photos.length < 2 || !visible || interacting || reducedMotion || paused) return;
+    if (photos.length < 2 || !visible || reducedMotion || paused) return;
     const timer = window.setInterval(() => {
-      if (!document.hidden) scrollTo(selected + 1);
+      if (document.hidden || Date.now() < manualUntilRef.current) return;
+      scrollTo(selected + 1);
     }, 4500);
     return () => window.clearInterval(timer);
-  }, [photos.length, visible, interacting, reducedMotion, paused, scrollTo, selected]);
+  }, [photos.length, visible, reducedMotion, paused, scrollTo, selected]);
 
   const syncPosition = () => {
     const track = trackRef.current;
@@ -69,15 +72,15 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
   };
 
   return (
-    <div ref={sectionRef} className="gallery-carousel" onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }}>
+    <div ref={sectionRef} className="gallery-carousel">
       <div className="gallery-controls">
         <span aria-live="polite">{String(selected + 1).padStart(2, "0")} <span aria-hidden="true">/</span> {String(photos.length).padStart(2, "0")}</span>
         <div>
-          <Button type="button" variant="ghost" size="icon" className="gallery-arrow" aria-label="Föregående bild" title="Föregående bild" disabled={photos.length < 2} onClick={() => scrollTo(selected - 1)}><ArrowLeft aria-hidden="true" /></Button>
-          <Button type="button" variant="ghost" size="icon" className="gallery-arrow" aria-label="Nästa bild" title="Nästa bild" disabled={photos.length < 2} onClick={() => scrollTo(selected + 1)}><ArrowRight aria-hidden="true" /></Button>
+          <Button type="button" variant="ghost" size="icon" className="gallery-arrow" aria-label="Föregående bild" title="Föregående bild" disabled={photos.length < 2} onClick={() => { markManual(); scrollTo(selected - 1); }}><ArrowLeft aria-hidden="true" /></Button>
+          <Button type="button" variant="ghost" size="icon" className="gallery-arrow" aria-label="Nästa bild" title="Nästa bild" disabled={photos.length < 2} onClick={() => { markManual(); scrollTo(selected + 1); }}><ArrowRight aria-hidden="true" /></Button>
         </div>
       </div>
-      <div ref={trackRef} className="gallery-track" role="region" aria-label="Bilder från Casa Nostra" tabIndex={0} onScroll={syncPosition} onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); scrollTo(selected + (event.key === "ArrowRight" ? 1 : -1)); } }}>
+      <div ref={trackRef} className="gallery-track" role="region" aria-label="Bilder från Casa Nostra" tabIndex={0} onScroll={syncPosition} onTouchStart={markManual} onWheel={markManual} onKeyDown={(event) => { if (event.key === "ArrowRight" || event.key === "ArrowLeft") { event.preventDefault(); markManual(); scrollTo(selected + (event.key === "ArrowRight" ? 1 : -1)); } }}>
         {photos.map((photo, index) => {
           const src = mediaUrl(photo.image_url);
           return <div className="gallery-slide" key={photo.id} role="group" aria-label={`${index + 1} av ${photos.length}`}>
