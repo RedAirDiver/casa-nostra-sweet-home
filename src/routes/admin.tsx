@@ -56,6 +56,8 @@ type Gallery = { id: string; image_url: string; caption: string | null; sort_ord
 type Offer = {
   id: string;
   label: string;
+  group_name: string | null;
+  image_url: string | null;
   price: string;
   price_note: string | null;
   body: string | null;
@@ -160,6 +162,7 @@ function AdminPage() {
   const [gallery, setGallery] = useState<Gallery[]>([]);
   const [news, setNews] = useState<News[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [newOfferGroup, setNewOfferGroup] = useState("");
   const [tab, setTab] = useState<Tab>("meny");
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -369,7 +372,7 @@ function AdminPage() {
           ["meny", "Meny"],
           ["galleri", "Galleri"],
           ["nyheter", "Nyheter"],
-          ["erbjudanden", "Lunch & deal"],
+          ["erbjudanden", "Lunch & erbjudanden"],
           ["agare", "Ägare"],
         ] as [Tab, string][]).map(([key, label]) => (
           <button key={key} className={tab === key ? btn : ghost} onClick={() => setTab(key)}>
@@ -938,26 +941,18 @@ function AdminPage() {
       )}
       {tab === "erbjudanden" && (
       <section className="mt-10 pb-20">
-        <h2 className="font-[var(--serif)] text-2xl">Lunch & deal</h2>
+        <h2 className="font-[var(--serif)] text-2xl">Lunch & erbjudanden</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Boxarna som visas överst på startsidan (Dagens lunch och Kvällsdeal). Radbryt i
-          beskrivningsfältet för nya rader. Dra i ⋮⋮ (eller använd pilarna) för att ändra
-          ordningen.
+          Lägg till en bild och lämna textfälten tomma för en lunchmeny som bara visar bilden.
+          Ange ett gruppnamn för till exempel julbord. Dra i ⋮⋮ eller använd pilarna för ordningen.
         </p>
-        <button
-          className={`${btn} mt-4`}
-          onClick={() =>
-            run(() =>
-              supabase.from("special_offers").insert({
-                label: "Ny box",
-                price: "",
-                sort_order: offers.length + 1,
-              }),
-            )
-          }
-        >
-          + Ny box
-        </button>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <label className="text-xs text-muted-foreground">Grupp (valfritt)
+            <input className={`${input} mt-1`} value={newOfferGroup} onChange={(e) => setNewOfferGroup(e.target.value)} placeholder="T.ex. Julbord" list="offer-groups" />
+          </label>
+          <datalist id="offer-groups">{Array.from(new Set(offers.map((o) => o.group_name).filter(Boolean))).map((name) => <option key={name} value={name ?? ""} />)}</datalist>
+          <button className={btn} onClick={() => run(() => supabase.from("special_offers").insert({ label: "", price: "", group_name: newOfferGroup.trim() || null, sort_order: offers.length + 1 }))}>+ Nytt erbjudande</button>
+        </div>
         <div className="mt-6 flex flex-col gap-5">
           {offers.map((o, idx) => (
             <article
@@ -1063,6 +1058,27 @@ function AdminPage() {
                   />
                 </label>
               </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <StoredImage path={o.image_url} alt={o.label || o.group_name || "Erbjudande"} className="h-24 w-32 rounded object-contain bg-muted" />
+                <label className={`${ghost} cursor-pointer`}>Välj bild
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    run(async () => {
+                      const path = await uploadFile(file);
+                      return supabase.from("special_offers").update({ image_url: path }).eq("id", o.id);
+                    });
+                  }} />
+                </label>
+                {o.image_url && <button className={ghost} onClick={() => run(() => supabase.from("special_offers").update({ image_url: null }).eq("id", o.id))}>Ta bort bild</button>}
+              </div>
+              <label className="mt-3 block text-xs text-muted-foreground">Grupp (valfritt)
+                <input className={`${input} mt-1`} defaultValue={o.group_name ?? ""} list="offer-groups" placeholder="Lunch & deal" onBlur={(e) => {
+                  const value = e.target.value.trim() || null;
+                  if (value !== o.group_name) run(() => supabase.from("special_offers").update({ group_name: value }).eq("id", o.id));
+                }} />
+              </label>
 
               <label className="mt-3 block text-xs text-muted-foreground">
                 Beskrivning (ny rad = ny rad på sidan)
