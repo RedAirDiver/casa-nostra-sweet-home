@@ -12,3 +12,4 @@
 - Process admin image uploads in the browser to a maximum width of 1000 pixels as 72-DPI JPEG before storage, so menu, gallery, and news images remain clear when opened larger.
 - Keep menu prices as two nullable numeric columns while editing both through one validated `first/second` text field; this preserves existing public price formatting and data.
 - Keep the printed-menu dish number in `item_number` independent of drag-and-drop `sort_order`, so reordering does not change the number guests use when ordering.
+- Keep lunch and seasonal offer images on `special_offers` with an optional group name, so image-only menus and grouped campaigns share the existing admin and public ordering flow.
