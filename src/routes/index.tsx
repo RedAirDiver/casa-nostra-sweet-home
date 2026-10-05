@@ -55,8 +55,8 @@ function formatPrice(price: number | null) {
   return price !== null && price > 0 ? `${Math.round(price)}:-` : null;
 }
 
-function ArrowLink({ href, children, external = false }: { href: string; children: React.ReactNode; external?: boolean }) {
-  return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}><span>{children}</span><i /><b>→</b></a>;
+function ArrowLink({ href, children, external = false, download }: { href: string; children: React.ReactNode; external?: boolean; download?: string }) {
+  return <a className="arrow-link" href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined} download={download}><span>{children}</span><i /><b>→</b></a>;
 }
 
 
