@@ -12,7 +12,6 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
 }) {
   const [selected, setSelected] = useState(0);
   const [visible, setVisible] = useState(false);
-  const [interacting, setInteracting] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
