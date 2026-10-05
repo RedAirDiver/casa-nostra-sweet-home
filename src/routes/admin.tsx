@@ -66,11 +66,11 @@ type Offer = {
   is_published: boolean;
 };
 
-const menuPriceSchema = z.string().trim().regex(/^(?:[1-9]\d{0,4}(?:\/[1-9]\d{0,4})?)?$/);
+const menuPriceSchema = z.string().trim().regex(/^(?:[1-9]\d{0,4})?$/);
 const menuNumberSchema = z.string().trim().regex(/^\d{0,4}$/);
 
-function menuPriceValue(price: number | null, priceLarge: number | null) {
-  return [price, priceLarge].filter((value) => value !== null && value > 0).join("/");
+function menuPriceValue(price: number | null) {
+  return price !== null && price > 0 ? String(price) : "";
 }
 type News = {
   id: string;
@@ -496,7 +496,7 @@ function AdminPage() {
             Rätter i {categories.find((c) => c.id === activeCategory)?.name}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Dra i ⋮⋮ (eller använd pilarna) för att ändra ordningen på rätterna. Skriv till exempel 150 eller 165/170 för två priser.
+            Dra i ⋮⋮ (eller använd pilarna) för att ändra ordningen på rätterna.
           </p>
           <div className="mt-4 flex flex-col gap-3">
             {catItems.map((it, idx) => (
@@ -600,15 +600,15 @@ function AdminPage() {
                       className={`${input} mt-1`}
                       type="text"
                       inputMode="numeric"
-                      maxLength={11}
-                      placeholder="150 eller 165/170"
+                      maxLength={5}
+                      placeholder="150"
                       aria-invalid={Boolean(priceErrors[it.id])}
                       aria-describedby={priceErrors[it.id] ? `price-error-${it.id}` : undefined}
-                      defaultValue={menuPriceValue(it.price, it.price_large)}
+                      defaultValue={menuPriceValue(it.price)}
                       onBlur={(e) => {
                         const parsed = menuPriceSchema.safeParse(e.target.value);
                         if (!parsed.success) {
-                          setPriceErrors((prev) => ({ ...prev, [it.id]: "Ange ett positivt heltal eller två priser, t.ex. 165/170." }));
+                          setPriceErrors((prev) => ({ ...prev, [it.id]: "Ange ett positivt heltal, t.ex. 150." }));
                           return;
                         }
                         setPriceErrors((prev) => {
@@ -616,10 +616,9 @@ function AdminPage() {
                           delete next[it.id];
                           return next;
                         });
-                        const [first, second] = parsed.data.split("/");
                         run(() => supabase.from("menu_items").update({
-                          price: first ? Number(first) : null,
-                          price_large: second ? Number(second) : null,
+                          price: parsed.data ? Number(parsed.data) : null,
+                          price_large: null,
                         }).eq("id", it.id));
                       }}
                     />
@@ -745,9 +744,27 @@ function AdminPage() {
                 alt={g.caption ?? "Galleribild"}
                 className="h-36 w-full rounded object-cover"
               />
+              <label className={`${ghost} mt-3 inline-block cursor-pointer`}>
+                Byt bild
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    run(async () => {
+                      const path = await uploadFile(file);
+                      return supabase.from("gallery_images").update({ image_url: path }).eq("id", g.id);
+                    });
+                    e.target.value = "";
+                  }}
+                />
+              </label>
               <input
                 className={`${input} mt-3`}
                 placeholder="Bildtext"
+                aria-label="Bildtext"
                 defaultValue={g.caption ?? ""}
                 onBlur={(e) =>
                   run(() =>
