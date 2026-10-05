@@ -19,6 +19,7 @@ import foodoraLogo from "@/assets/foodora-logo.svg";
 
 import { getSiteContent } from "@/lib/menu.functions";
 import { mediaUrl } from "@/lib/media";
+import { GalleryCarousel } from "@/components/GalleryCarousel";
 
 const ASSET_BASE = "https://casa-nostra-sweet-home.lovable.app/__l5e/assets-v1";
 const logoUrl = `${ASSET_BASE}/5fabc25b-c579-4c19-8939-9fd2e28c12bf/a86ce1af-2fa4-4341-9c11-5e2bd0854372.jpg`;
@@ -107,7 +108,7 @@ function Index() {
 
     <section id="om" className="about"><div className="about-photo"><img src={restaurantUrl} alt="Restaurangen Casa Nostra i Kjula" /></div><div className="about-copy"><p className="eyebrow">Om oss</p><h2>Det finns inget mer romantiskt än italiensk mat</h2><p>Vår filosofi är enkel: god mat lagad på råvaror av hög kvalitet. Vi har plats för stora sällskap inomhus, och varje vardag serverar vi lunch som är lika bra att äta här som att ta med på språng.</p><p>Oavsett vad du är sugen på att dricka till din måltid har vi något som passar – en kall Ramlösa, ett glas vin eller en öl. Vi har fullständiga rättigheter.</p><ArrowLink href="tel:016-2004909">Ring oss</ArrowLink></div></section>
 
-    <section id="galleri" className="section gallery"><div className="section-heading right"><div><p className="eyebrow">Atmosfär</p><h2>Galleri</h2></div></div><div className="gallery-grid">{(gallery.length ? gallery : [{ id: "a", image_url: galleryOneUrl, caption: "Miljö hos Casa Nostra" }, { id: "b", image_url: galleryTwoUrl, caption: "Italiensk mat" }, { id: "c", image_url: restaurantUrl, caption: "Casa Nostra restaurang" }]).map((g, i) => <img key={g.id} className={(i === 0 ? "gallery-main " : "") + "gallery-zoom"} src={mediaUrl(g.image_url) ?? ""} alt={g.caption ?? "Bild från Casa Nostra"} onClick={() => { const src = mediaUrl(g.image_url); if (src) setLightbox(src); }} />)}</div></section>
+    <section id="galleri" className="section gallery"><div className="section-heading right"><div><p className="eyebrow">Atmosfär</p><h2>Galleri</h2></div></div><GalleryCarousel photos={gallery.length ? gallery : [{ id: "a", image_url: galleryOneUrl, caption: "Miljö hos Casa Nostra" }, { id: "b", image_url: galleryTwoUrl, caption: "Italiensk mat" }, { id: "c", image_url: restaurantUrl, caption: "Casa Nostra restaurang" }]} onOpen={setLightbox} paused={Boolean(lightbox)} /></section>
 
     {news.length > 0 && <section id="nyheter" className="section news-section">
       <div className="section-heading"><div><p className="eyebrow">Aktuellt</p><h2>Senaste nytt</h2></div></div>
