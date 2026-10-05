@@ -44,13 +44,17 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
     return () => motion.removeEventListener("change", update);
   }, []);
 
+  const manualUntilRef = useRef(0);
+  const markManual = useCallback(() => { manualUntilRef.current = Date.now() + 9000; }, []);
+
   useEffect(() => {
-    if (photos.length < 2 || !visible || interacting || reducedMotion || paused) return;
+    if (photos.length < 2 || !visible || reducedMotion || paused) return;
     const timer = window.setInterval(() => {
-      if (!document.hidden) scrollTo(selected + 1);
+      if (document.hidden || Date.now() < manualUntilRef.current) return;
+      scrollTo(selected + 1);
     }, 4500);
     return () => window.clearInterval(timer);
-  }, [photos.length, visible, interacting, reducedMotion, paused, scrollTo, selected]);
+  }, [photos.length, visible, reducedMotion, paused, scrollTo, selected]);
 
   const syncPosition = () => {
     const track = trackRef.current;
