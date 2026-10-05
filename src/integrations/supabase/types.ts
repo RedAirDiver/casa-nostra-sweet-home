@@ -183,7 +183,9 @@ export type Database = {
           body: string | null
           created_at: string
           footnote: string | null
+          group_name: string | null
           id: string
+          image_url: string | null
           is_published: boolean
           label: string
           price: string
@@ -195,7 +197,9 @@ export type Database = {
           body?: string | null
           created_at?: string
           footnote?: string | null
+          group_name?: string | null
           id?: string
+          image_url?: string | null
           is_published?: boolean
           label: string
           price?: string
@@ -207,7 +211,9 @@ export type Database = {
           body?: string | null
           created_at?: string
           footnote?: string | null
+          group_name?: string | null
           id?: string
+          image_url?: string | null
           is_published?: boolean
           label?: string
           price?: string

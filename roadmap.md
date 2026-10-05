@@ -1,0 +1,3 @@
+- [x] Låt lunchmenyer visas som bilder utan text och behåll valfri text.
+- [x] Låt administratören skapa grupper för specialerbjudanden.
+- [x] Lägg till Tillbehör som egen kategori efter maträtterna.

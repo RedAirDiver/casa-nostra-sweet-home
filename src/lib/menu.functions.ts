@@ -33,6 +33,8 @@ export type NewsPost = {
 export type SpecialOffer = {
   id: string;
   label: string;
+  group_name: string | null;
+  image_url: string | null;
   price: string;
   price_note: string | null;
   body: string | null;
@@ -91,7 +93,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
       .limit(3),
     supabase
       .from("special_offers")
-      .select("id, label, price, price_note, body, footnote")
+      .select("id, label, group_name, image_url, price, price_note, body, footnote")
       .eq("is_published", true)
       .order("sort_order"),
   ]);
@@ -132,6 +134,8 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
   const offers: SpecialOffer[] = (offersRes.data ?? []).map((o) => ({
     id: o.id,
     label: o.label,
+    group_name: o.group_name,
+    image_url: o.image_url,
     price: o.price,
     price_note: o.price_note,
     body: o.body,
@@ -148,6 +152,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
   }
   for (const g of gallery) if (isStoragePath(g.image_url)) paths.add(g.image_url);
   for (const n of news) if (isStoragePath(n.image_url)) paths.add(n.image_url!);
+  for (const o of offers) if (isStoragePath(o.image_url)) paths.add(o.image_url!);
 
   if (paths.size > 0) {
     const signedMap = new Map<string, string>();
@@ -164,6 +169,7 @@ export const getSiteContent = createServerFn({ method: "GET" }).handler(async ()
     }
     for (const g of gallery) g.image_url = sign(g.image_url) ?? g.image_url;
     for (const n of news) n.image_url = sign(n.image_url);
+    for (const o of offers) o.image_url = sign(o.image_url);
   }
 
   return { categories, gallery, news, offers };
