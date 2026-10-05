@@ -92,7 +92,7 @@ function Index() {
 
     <section id="meny" className="section menu-section">
       <div className="section-heading"><div><h2>Våra rätter</h2></div><a className="gold-link" href="tel:016-2004909">Ring & beställ 016-200 49 09 →</a></div>
-      <div className="menu-grid">{categories.map((c, i) => <a href={`#grupp-${c.id}`} className="menu-card" key={c.id}><div className={`food food-${i}`}><img src={mediaUrl(c.image_url) ?? (i % 2 ? galleryTwoUrl : galleryOneUrl)} alt={`${c.name} från Casa Nostra`} /></div><div className="menu-card-info"><strong>{c.name}</strong>{c.description ? <span>{c.description}</span> : <span>{c.items.length > 0 ? `${c.items.length} rätter` : "Fråga oss"}</span>}</div></a>)}</div>
+      <div className="menu-grid">{categories.map((c, i) => <a href={`#grupp-${c.id}`} className="menu-card" key={c.id}><div className={`food food-${i}`}><img src={mediaUrl(c.image_url) ?? (i % 2 ? galleryTwoUrl : galleryOneUrl)} alt={`${c.name} från Casa Nostra`} /></div><div className="menu-card-info"><strong>{c.name}</strong>{c.description && <span>{c.description}</span>}</div></a>)}</div>
       {categories.filter((c) => c.items.length > 0).map((c) => <div className="menu-group" id={`grupp-${c.id}`} key={c.id}>
         <h3>{c.name}</h3>
         {c.description && <p className="menu-group-desc">{c.description}</p>}
