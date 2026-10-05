@@ -1,3 +1,5 @@
 - [x] Låt lunchmenyer visas som bilder utan text och behåll valfri text.
 - [x] Låt administratören skapa grupper för specialerbjudanden.
 - [x] Lägg till Tillbehör som egen kategori efter maträtterna.
+- [x] Byt galleriet till en rullande bildkarusell med manuell styrning och förstoring.
+- [ ] Nya kategoribilder tillhandahålls av kunden; ändra inte dem nu.
