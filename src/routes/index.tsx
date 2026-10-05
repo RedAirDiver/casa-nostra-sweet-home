@@ -51,11 +51,8 @@ const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss",
 
 const dateFormatter = new Intl.DateTimeFormat("sv-SE", { day: "numeric", month: "long", year: "numeric" });
 
-function formatPrice(price: number | null, priceLarge: number | null) {
-  if (price === null && priceLarge === null) return null;
-  const parts = [price, priceLarge].filter((p): p is number => p !== null && p > 0).map((p) => String(Math.round(p)));
-  if (parts.length === 0) return null;
-  return `${parts.join("/")}:-`;
+function formatPrice(price: number | null) {
+  return price !== null && price > 0 ? `${Math.round(price)}:-` : null;
 }
 
 function ArrowLink({ href, children, external = false }: { href: string; children: React.ReactNode; external?: boolean }) {
@@ -94,14 +91,14 @@ function Index() {
     {offers.length > 0 && <section id="lunch" className="offers">{Array.from(new Set(offers.map((o) => o.group_name || "Lunch & deal"))).map((group) => <div className="offer-group" key={group}>{group !== "Lunch & deal" && <h2>{group}</h2>}<div className="offer-grid">{offers.filter((o) => (o.group_name || "Lunch & deal") === group).map((o) => <article key={o.id} className={o.image_url && !o.label && !o.price && !o.price_note && !o.body && !o.footnote ? "offer-image-only" : ""}>{o.image_url && <img className="gallery-zoom" src={mediaUrl(o.image_url) ?? ""} alt={o.label || group} loading="lazy" onClick={() => { const src = mediaUrl(o.image_url); if (src) setLightbox(src); }} />}{o.label && <p className="gold-label">{o.label}</p>}{(o.price || o.price_note) && <div className="price">{o.price && <strong>{o.price}</strong>}{o.price_note && <span>{o.price_note}</span>}</div>}{o.body && <p>{o.body.split("\n").map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}</p>}{o.footnote && <small>{o.footnote}</small>}</article>)}</div></div>)}</section>}
 
     <section id="meny" className="section menu-section">
-      <div className="section-heading"><div><p className="eyebrow">Vår meny</p><h2>Våra rätter</h2></div><a className="gold-link" href="tel:016-2004909">Ring & beställ →</a></div>
-      <div className="menu-grid">{categories.map((c, i) => <a href={`#grupp-${c.id}`} className="menu-card" key={c.id}><div className={`food food-${i}`}><img src={mediaUrl(c.image_url) ?? (i % 2 ? galleryTwoUrl : galleryOneUrl)} alt={`${c.name} från Casa Nostra`} /></div><div><strong>{c.name}</strong><span>{c.items.length > 0 ? `${c.items.length} rätter` : "Fråga oss"}</span></div></a>)}</div>
+      <div className="section-heading"><div><h2>Våra rätter</h2></div><a className="gold-link" href="tel:016-2004909">Ring & beställ →</a></div>
+      <div className="menu-grid">{categories.map((c, i) => <a href={`#grupp-${c.id}`} className="menu-card" key={c.id}><div className={`food food-${i}`}><img src={mediaUrl(c.image_url) ?? (i % 2 ? galleryTwoUrl : galleryOneUrl)} alt={`${c.name} från Casa Nostra`} /></div><div className="menu-card-info"><strong>{c.name}</strong>{c.description ? <span>{c.description}</span> : <span>{c.items.length > 0 ? `${c.items.length} rätter` : "Fråga oss"}</span>}</div></a>)}</div>
       {categories.filter((c) => c.items.length > 0).map((c) => <div className="menu-group" id={`grupp-${c.id}`} key={c.id}>
         <h3>{c.name}</h3>
         {c.description && <p className="menu-group-desc">{c.description}</p>}
         <div className="menu-list">{c.items.map((item) => <div className="menu-row" key={item.id}>
           <div><strong>{item.item_number && <span className="menu-item-number">{item.item_number}.</span>}{item.name}</strong>{item.description && <span>{item.description}</span>}</div>
-          {formatPrice(item.price, item.price_large) && <b>{formatPrice(item.price, item.price_large)}</b>}
+          {formatPrice(item.price) && <b>{formatPrice(item.price)}</b>}
         </div>)}</div>
       </div>)}
     </section>

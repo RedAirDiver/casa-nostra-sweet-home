@@ -3,6 +3,6 @@
 - [x] Lägg till Tillbehör som egen kategori efter maträtterna.
 - [x] Byt galleriet till en rullande bildkarusell med manuell styrning och förstoring.
 - [ ] Nya kategoribilder tillhandahålls av kunden; ändra inte dem nu.
-- [ ] Byt bild i galleri utan att radera posten.
-- [ ] Visa galleriets bildtexter och menygruppernas beskrivningar på sidan.
-- [ ] Visa och redigera endast ett pris per rätt, samt ta bort "Vår meny".
+- [x] Byt bild i galleri utan att radera posten.
+- [x] Visa galleriets bildtexter och menygruppernas beskrivningar på sidan.
+- [x] Visa och redigera endast ett pris per rätt, samt ta bort "Vår meny".
