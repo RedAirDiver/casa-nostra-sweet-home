@@ -22,7 +22,10 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
     const slides = track?.querySelectorAll<HTMLElement>(".gallery-slide");
     if (!track || !slides?.length) return;
     const next = (index + slides.length) % slides.length;
-    track.scrollTo({ left: slides[next].offsetLeft - slides[0].offsetLeft, behavior: reducedMotion ? "instant" : "smooth" });
+    const target = slides[next];
+    const first = slides[0];
+    if (!target || !first) return;
+    track.scrollTo({ left: target.offsetLeft - first.offsetLeft, behavior: reducedMotion ? "instant" : "smooth" });
     setSelected(next);
   }, [reducedMotion]);
 
@@ -54,10 +57,12 @@ export function GalleryCarousel({ photos, onOpen, paused }: {
     const track = trackRef.current;
     const slides = track?.querySelectorAll<HTMLElement>(".gallery-slide");
     if (!track || !slides?.length) return;
+    const first = slides[0];
+    if (!first) return;
     let closest = 0;
     let distance = Infinity;
     slides.forEach((slide, index) => {
-      const current = Math.abs(slide.offsetLeft - slides[0].offsetLeft - track.scrollLeft);
+      const current = Math.abs(slide.offsetLeft - first.offsetLeft - track.scrollLeft);
       if (current < distance) { closest = index; distance = current; }
     });
     setSelected(closest);
