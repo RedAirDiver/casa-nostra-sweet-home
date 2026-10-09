@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Italienska flaggan">
+  <defs>
+    <clipPath id="r">
+      <rect width="64" height="64" rx="14" ry="14" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="64" height="64" fill="#FFFFFF" />
+    <rect width="21.34" height="64" fill="#009540" />
+    <rect x="42.66" width="21.34" height="64" fill="#D50032" />
+  </g>
+</svg>
