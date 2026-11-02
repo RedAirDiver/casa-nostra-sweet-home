@@ -47,7 +47,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const nav = [["Hem", "#top"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Nyheter", "#nyheter"], ["Hitta hit", "#hitta"]];
+const nav = [["Hem", "#top"], ["Nyheter", "#nyheter"], ["Meny", "#meny"], ["Lunch", "#lunch"], ["Om oss", "#om"], ["Galleri", "#galleri"], ["Hitta hit", "#hitta"]];
 
 const dateFormatter = new Intl.DateTimeFormat("sv-SE", { day: "numeric", month: "long", year: "numeric" });
 
@@ -88,6 +88,20 @@ function Index() {
       <div className="hero-content"><p className="eyebrow">Ristorante · Kjula</p><h1>Casa Nostra</h1><p className="intro">Mötesplatsen för dig och det italienska köket. Med stor erfarenhet och passion för goda råvaror välkomnas du alltid med omsorg – och lämnar med ett leende. Fullständiga rättigheter.</p><div className="hero-links"><ArrowLink href="#meny">Utforska menyn</ArrowLink><ArrowLink href="tel:016-2004909">Ring & beställ 016-200 49 09</ArrowLink><ArrowLink external href="/meny-casa-nostra.pdf" download="Casa-Nostra-menyn.pdf">Ladda ner menyn (PDF)</ArrowLink></div></div>
     </section>
 
+    {news.length > 0 && <section id="nyheter" className="section news-section">
+      <div className="section-heading"><div><p className="eyebrow">Aktuellt</p><h2>Senaste nytt</h2></div></div>
+      <div className="news-grid">{news.map((p) => {
+        const src = mediaUrl(p.image_url);
+        return <article className="news-card" key={p.id}>
+        {src && <img className="gallery-zoom" src={src} alt={p.title} loading="lazy" onClick={() => setLightbox(src)} />}
+        <div className="news-body">
+          <time dateTime={p.published_at}>{dateFormatter.format(new Date(p.published_at))}</time>
+          <h3>{p.title}</h3>
+          {p.body && <div className="news-text" dangerouslySetInnerHTML={{ __html: p.body }} />}
+        </div>
+      </article>;})}</div>
+    </section>}
+
     {offers.length > 0 && <section id="lunch" className="offers">{Array.from(new Set(offers.map((o) => o.group_name || "Lunch & deal"))).map((group) => <div className="offer-group" key={group}>{group !== "Lunch & deal" && <h2>{group}</h2>}<div className="offer-grid">{offers.filter((o) => (o.group_name || "Lunch & deal") === group).map((o) => <article key={o.id} className={o.image_url && !o.label && !o.price && !o.price_note && !o.body && !o.footnote ? "offer-image-only" : ""}>{o.image_url && <img className="gallery-zoom" src={mediaUrl(o.image_url) ?? ""} alt={o.label || group} loading="lazy" onClick={() => { const src = mediaUrl(o.image_url); if (src) setLightbox(src); }} />}{o.label && <p className="gold-label">{o.label}</p>}{(o.price || o.price_note) && <div className="price">{o.price && <strong>{o.price}</strong>}{o.price_note && <span>{o.price_note}</span>}</div>}{o.body && <p>{o.body.split("\n").map((line, i) => <span key={i}>{i > 0 && <br />}{line}</span>)}</p>}{o.footnote && <small>{o.footnote}</small>}</article>)}</div></div>)}</section>}
 
     <section id="meny" className="section menu-section">
@@ -107,23 +121,9 @@ function Index() {
 
     <section id="galleri" className="section gallery"><div className="section-heading right"><div><p className="eyebrow">Atmosfär</p><h2>Galleri</h2></div></div><GalleryCarousel photos={gallery.length ? gallery : [{ id: "a", image_url: galleryOneUrl, caption: "Miljö hos Casa Nostra" }, { id: "b", image_url: galleryTwoUrl, caption: "Italiensk mat" }, { id: "c", image_url: restaurantUrl, caption: "Casa Nostra restaurang" }]} onOpen={setLightbox} paused={Boolean(lightbox)} /></section>
 
-    {news.length > 0 && <section id="nyheter" className="section news-section">
-      <div className="section-heading"><div><p className="eyebrow">Aktuellt</p><h2>Senaste nytt</h2></div></div>
-      <div className="news-grid">{news.map((p) => {
-        const src = mediaUrl(p.image_url);
-        return <article className="news-card" key={p.id}>
-        {src && <img className="gallery-zoom" src={src} alt={p.title} loading="lazy" onClick={() => setLightbox(src)} />}
-        <div className="news-body">
-          <time dateTime={p.published_at}>{dateFormatter.format(new Date(p.published_at))}</time>
-          <h3>{p.title}</h3>
-          {p.body && <div className="news-text" dangerouslySetInnerHTML={{ __html: p.body }} />}
-        </div>
-      </article>;})}</div>
-    </section>}
-
     <section id="hitta" className="visit"><div><p className="eyebrow">Besök oss</p><h2>Hitta hit</h2><Info title="Adress"><a target="_blank" rel="noreferrer" href="https://www.google.com/maps/search/?api=1&query=Casa+Nostra+Kjula%2C+Williams+v%C3%A4g+2%2C+635+06+Eskilstuna">Williams väg 2, 635 06 Eskilstuna</a></Info><Info title="Öppettider"><div className="hours"><small>Sommartid</small><span>Måndag–fredag</span><span>11:00–21:00</span><span>Lördag–söndag</span><span>12:00–21:00</span><small>Vintertid</small><span>Måndag–torsdag</span><span>11:00–20:00</span><span>Fredag</span><span>11:00–21:00</span><span>Lördag</span><span>12:00–21:00</span><span>Söndag</span><span>12:00–20:00</span></div></Info><Info title="Telefon"><a href="tel:016-2004909">016-200 49 09</a><a className="mail" href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></Info></div><div className="map"><iframe title="Google Maps – Casa Nostra Kjula" src="https://www.google.com/maps?q=Casa+Nostra+Kjula%2C+Williams+v%C3%A4g+2%2C+635+06+Eskilstuna&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen /></div></section>
 
-    <footer><div className="footer-grid"><div><h3>Casa <em>Nostra</em> Kjula</h3><p>Italienskt kök i Kjula – pizza, pasta, sallader och à la carte. Fullständiga rättigheter.</p><div className="social"><a href="https://instagram.com/casanostrakjula" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Instagram"><Instagram size={19} aria-hidden="true" /><span>Instagram</span></a><a href="https://facebook.com/casanostrakjula" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Facebook"><Facebook size={19} aria-hidden="true" /><span>Facebook</span></a><a href="https://www.tripadvisor.se/Restaurant_Review-g227951-d34360816-Reviews-Casa_Nostra_Kjula-Eskilstuna_Sodermanland_County.html" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Tripadvisor"><TripAdvisorIcon size={19} /><span>Tripadvisor</span></a><a href="https://www.foodora.se/restaurant/ph5r/casa-nostra-kjula-ph5r" target="_blank" rel="noreferrer" aria-label="Beställ från Casa Nostra Kjula på Foodora"><img src={foodoraLogo} alt="Foodora" width={118} height={26} className="footer-foodora" /></a></div></div><div><h3>Kjula</h3><p>Williams väg 2, 635 06 Eskilstuna</p><a href="tel:016-2004909">016-200 49 09</a><a href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></div><div><p className="gold-label">Sidor</p>{nav.filter((_,i) => [0,1,3,6].includes(i)).map(([l,h]) => <a href={h} key={l}>{l}</a>)}<Link to="/auth">Logga in</Link></div></div><div className="copyright">© 2026 Casa Nostra Kjula</div></footer>
+    <footer><div className="footer-grid"><div><h3>Casa <em>Nostra</em> Kjula</h3><p>Italienskt kök i Kjula – pizza, pasta, sallader och à la carte. Fullständiga rättigheter.</p><div className="social"><a href="https://instagram.com/casanostrakjula" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Instagram"><Instagram size={19} aria-hidden="true" /><span>Instagram</span></a><a href="https://facebook.com/casanostrakjula" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Facebook"><Facebook size={19} aria-hidden="true" /><span>Facebook</span></a><a href="https://www.tripadvisor.se/Restaurant_Review-g227951-d34360816-Reviews-Casa_Nostra_Kjula-Eskilstuna_Sodermanland_County.html" target="_blank" rel="noreferrer" aria-label="Casa Nostra Kjula på Tripadvisor"><TripAdvisorIcon size={19} /><span>Tripadvisor</span></a><a href="https://www.foodora.se/restaurant/ph5r/casa-nostra-kjula-ph5r" target="_blank" rel="noreferrer" aria-label="Beställ från Casa Nostra Kjula på Foodora"><img src={foodoraLogo} alt="Foodora" width={118} height={26} className="footer-foodora" /></a></div></div><div><h3>Kjula</h3><p>Williams väg 2, 635 06 Eskilstuna</p><a href="tel:016-2004909">016-200 49 09</a><a href="mailto:info@casanostrakjula.se">info@casanostrakjula.se</a></div><div><p className="gold-label">Sidor</p>{nav.filter(([label]) => ["Hem", "Meny", "Om oss", "Hitta hit"].includes(label)).map(([l,h]) => <a href={h} key={l}>{l}</a>)}<Link to="/auth">Logga in</Link></div></div><div className="copyright">© 2026 Casa Nostra Kjula</div></footer>
     {lightbox && <div className="lightbox" role="dialog" aria-label="Större bild" onClick={() => setLightbox(null)}><button className="lightbox-close" aria-label="Stäng" onClick={() => setLightbox(null)}>×</button><img src={lightbox} alt="Bild från Casa Nostra" onClick={(e) => e.stopPropagation()} /></div>}
   </main>;
 }
